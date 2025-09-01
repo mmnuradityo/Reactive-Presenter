@@ -2,7 +2,6 @@ package com.aditya.reactivepresenterarchitecture.ui.main
 
 import androidx.lifecycle.Lifecycle
 import com.aditya.reactivepresenterarchitecture.manager.ReactivePresenter
-import com.aditya.reactivepresenterarchitecture.manager.ViewState
 import rx.Observable
 import rx.Scheduler
 import java.util.concurrent.TimeUnit
@@ -23,8 +22,8 @@ class MainPresenter(
     }
 
     fun getList() {
-        val modelView = getViewState().modelView
-        transformAndSubscribe(
+        val modelView = getViewState().getModelView()
+        bindViewState(
             source = Observable.just(list).delay(5, TimeUnit.SECONDS),
             loading = MainViewState.Loading(modelView),
             success = { newList ->
@@ -35,16 +34,4 @@ class MainPresenter(
             }
         )
     }
-}
-
-data class MainModelView(
-    val list: List<String> = emptyList(),
-    val error: String? = null
-)
-
-sealed class MainViewState(val modelView: MainModelView): ViewState {
-    data object Empty: MainViewState(MainModelView())
-    data class Loading(val model: MainModelView): MainViewState(model)
-    data class StringList(val model: MainModelView): MainViewState(model)
-    data class Error(val model: MainModelView): MainViewState(model)
 }

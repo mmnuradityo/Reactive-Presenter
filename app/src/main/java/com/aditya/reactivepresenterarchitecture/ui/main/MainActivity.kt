@@ -40,7 +40,7 @@ class MainActivity : AppCompatActivity() {
 
                 is MainViewState.Loading -> {
                     binding.tvText.text =
-                        if (it.modelView.list.isEmpty()) "Loading...." else it.modelView.list[3]
+                        if (it.getModelView().list.isEmpty()) "Loading...." else it.getModelView().list[3]
                 }
 
                 is MainViewState.StringList -> {

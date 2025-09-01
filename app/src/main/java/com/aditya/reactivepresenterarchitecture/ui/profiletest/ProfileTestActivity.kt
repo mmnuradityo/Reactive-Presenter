@@ -14,6 +14,7 @@ import com.aditya.reactivepresenterarchitecture.databinding.ActivityProfileTestB
 import com.aditya.reactivepresenterarchitecture.ui.PresenterFactory
 import com.aditya.reactivepresenterarchitecture.ui.main.MainActivity
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
+import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentActivity
 
 class ProfileTestActivity : AppCompatActivity() {
 
@@ -31,6 +32,11 @@ class ProfileTestActivity : AppCompatActivity() {
         }
         binding.btnOpenMain.setOnClickListener {
             val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnOpenMainFragment.setOnClickListener {
+            val intent = Intent(this, MainFragmentActivity::class.java)
             startActivity(intent)
         }
     }
