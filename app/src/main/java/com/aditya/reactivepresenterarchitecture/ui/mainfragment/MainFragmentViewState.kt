@@ -1,54 +1,60 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment;
 
-import com.aditya.reactivepresenterarchitecture.manager.ModelView
-import com.aditya.reactivepresenterarchitecture.manager.ViewState
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ModelView
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ViewState
 
 data class MainFragmentModelView(
     val result: String = "",
-    val error: String? = null
-) : ModelView {
-    private var isDone: Boolean = false
-
-    override fun setDone(isDone: Boolean) {
-        this.isDone = isDone
-    }
-
-    override fun isDone(): Boolean = isDone
-}
+    val error: String? = null,
+) : ModelView()
 
 sealed class MainFragmentViewState(
-   private val modelView: MainFragmentModelView
-): ViewState<MainFragmentModelView> {
-    data object Empty: MainFragmentViewState(MainFragmentModelView())
-    data class Loading(val model: MainFragmentModelView): MainFragmentViewState(model)
-    data class Data(val model: MainFragmentModelView): MainFragmentViewState(model)
-    data class Error(val model: MainFragmentModelView): MainFragmentViewState(model)
+    modelView: MainFragmentModelView,
+) : ViewState<MainFragmentModelView>(modelView) {
 
-    override fun getModelView(): MainFragmentModelView = modelView
+    data object Empty : MainFragmentViewState(
+        MainFragmentModelView()
+    )
+
+    data class Loading(
+        val model: MainFragmentModelView,
+    ) : MainFragmentViewState(model)
+
+    data class Data(
+        val model: MainFragmentModelView,
+    ) : MainFragmentViewState(model)
+
+    data class Error(
+        val model: MainFragmentModelView,
+    ) : MainFragmentViewState(model)
+
 }
 
 data class MainFragmentComponentModelView(
     val result: String = "",
-    val error: String? = null
-) : ModelView {
-    private var isDone: Boolean = false
-
-    override fun setDone(isDone: Boolean) {
-        this.isDone = isDone
-    }
-
-    override fun isDone(): Boolean = isDone
-}
+    val error: String? = null,
+) : ModelView()
 
 sealed class MainFragmentComponentViewState(
-    private val modelView: MainFragmentComponentModelView
-): ViewState<MainFragmentComponentModelView> {
-    data object Empty: MainFragmentComponentViewState(MainFragmentComponentModelView())
-    data class Loading(val model: MainFragmentComponentModelView): MainFragmentComponentViewState(model)
-    data class Data(val model: MainFragmentComponentModelView): MainFragmentComponentViewState(model)
-    data class Error(val model: MainFragmentComponentModelView): MainFragmentComponentViewState(model)
+    modelView: MainFragmentComponentModelView,
+) : ViewState<MainFragmentComponentModelView>(modelView) {
 
-    override fun getModelView(): MainFragmentComponentModelView = modelView
+    data object Empty : MainFragmentComponentViewState(
+        MainFragmentComponentModelView()
+    )
+
+    data class Loading(
+        val model: MainFragmentComponentModelView,
+    ) : MainFragmentComponentViewState(model)
+
+    data class Data(
+        val model: MainFragmentComponentModelView,
+    ) : MainFragmentComponentViewState(model)
+
+    data class Error(
+        val model: MainFragmentComponentModelView,
+    ) : MainFragmentComponentViewState(model)
+
 }
 
 enum class MainFragmentPresenterKey(val value: String) {

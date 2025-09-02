@@ -7,8 +7,8 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.aditya.reactivepresenterarchitecture.databinding.ActivityMainFragmentBinding
-import com.aditya.reactivepresenterarchitecture.manager.PresenterInjector
-import com.aditya.reactivepresenterarchitecture.manager.PresenterProvider
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterInjector
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterProvider
 import com.aditya.reactivepresenterarchitecture.ui.PresenterFactory
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.AFragment
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.BFragment

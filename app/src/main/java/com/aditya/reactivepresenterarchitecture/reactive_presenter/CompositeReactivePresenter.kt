@@ -1,7 +1,6 @@
-package com.aditya.reactivepresenterarchitecture.manager
+package com.aditya.reactivepresenterarchitecture.reactive_presenter
 
 import androidx.lifecycle.Lifecycle
-import com.aditya.reactivepresenterarchitecture.manager.ReactivePresenter.Observer
 import rx.Observable
 import rx.Scheduler
 import rx.Subscription
@@ -11,20 +10,20 @@ import rx.subscriptions.CompositeSubscription
 import java.util.concurrent.atomic.AtomicBoolean
 import java.util.concurrent.atomic.AtomicReference
 
-abstract class NestedReactivePresenter<V, C>(
-    state: V,
-    private val componentStates: MutableMap<String, C>,
+abstract class CompositeReactivePresenter<VS, CS>(
+    state: VS,
+    private val componentStates: MutableMap<String, CS>,
     lifecycle: Lifecycle, schedulerObserver: Scheduler
-) : ReactivePresenter<V>(
+) : ReactivePresenter<VS>(
     state, lifecycle, schedulerObserver
-), INestedReactivePresenter<C> where V : ViewState<*>, C : ViewState<*> {
+), ICompositeReactivePresenter<CS> where VS : ViewState<*>, CS : ViewState<*> {
 
     private var subscriptionObserver: Subscription? = null
     private val componentSubscriptions = CompositeSubscription()
-    private val _componentViewState: BehaviorSubject<Map<String, C>> = BehaviorSubject.create(
+    private val _componentState: BehaviorSubject<Map<String, CS>> = BehaviorSubject.create(
         componentStates.toMap()
     )
-    private val componentViewState = _componentViewState.asObservable()
+    private val componentState = _componentState.asObservable()
     private val isComponentPaused = AtomicBoolean(false)
     protected val componentKey = AtomicReference("")
 
@@ -39,13 +38,13 @@ abstract class NestedReactivePresenter<V, C>(
         isComponentPaused.set(true)
     }
 
-    fun getComponentViewState(): C? {
-        return _componentViewState.value?.get(componentKey.get())
+    override fun getComponentState(): CS? {
+        return _componentState.value?.get(componentKey.get())
     }
 
-    override fun observeComponentViewState(observer: Observer<C>) {
+    override fun observeComponentState(observer: Observer<CS>) {
         subscriptionObserver?.unsubscribe()
-        subscriptionObserver = componentViewState
+        subscriptionObserver = componentState
             .distinctUntilChanged { old, new ->
                 val key = componentKey.get()
                 val isValid = validateNewValue(old[key], new[key])
@@ -63,11 +62,11 @@ abstract class NestedReactivePresenter<V, C>(
             }
     }
 
-    fun <T, R> bindComponentViewState(
-        source: Observable<T>, loading: R?, success: Func1<T, R>?, error: Func1<Throwable, R>?,
-    ) where R : C {
+    protected fun <T> bindComponentState(
+        source: Observable<T>, loading: CS?, success: Func1<T, CS>?, error: Func1<Throwable, CS>?,
+    ) {
         componentSubscriptions.add(
-            observersViewState(source, loading, success, error)
+            transformViewState(source, loading, success, error)
                 .filter {
                     val isStart = !isComponentPaused.get()
                     it.getModelView().setDone(isStart)
@@ -75,7 +74,7 @@ abstract class NestedReactivePresenter<V, C>(
                 }
                 .subscribe {
                     componentStates[componentKey.get()] = it
-                    _componentViewState.onNext(componentStates.toMap())
+                    _componentState.onNext(componentStates.toMap())
                 }
         )
     }
@@ -88,8 +87,9 @@ abstract class NestedReactivePresenter<V, C>(
 
 }
 
-interface INestedReactivePresenter<C> where C : ViewState<*> {
+interface ICompositeReactivePresenter<CS> where CS : ViewState<*> {
     fun attachView(key: String)
     fun detachView()
-    fun observeComponentViewState(observer: Observer<C>)
+    fun getComponentState(): CS?
+    fun observeComponentState(observer: Observer<CS>)
 }

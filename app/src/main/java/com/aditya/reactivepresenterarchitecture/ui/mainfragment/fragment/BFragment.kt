@@ -9,7 +9,7 @@ import android.view.ViewGroup
 import androidx.core.content.ContextCompat
 import com.aditya.reactivepresenterarchitecture.R
 import com.aditya.reactivepresenterarchitecture.databinding.FragmentLayoutBinding
-import com.aditya.reactivepresenterarchitecture.manager.PresenterInjector
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterInjector
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.FRAGMENT_KEY
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentComponentViewState
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentPresenterKey
@@ -42,7 +42,7 @@ class BFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        presenter.observeComponentViewState {
+        presenter.observeComponentState {
             when (it) {
                 is MainFragmentComponentViewState.Empty -> {
                     binding.tvText.text = "Greetings from B"

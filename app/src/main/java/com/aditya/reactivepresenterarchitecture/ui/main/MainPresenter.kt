@@ -1,7 +1,7 @@
 package com.aditya.reactivepresenterarchitecture.ui.main
 
 import androidx.lifecycle.Lifecycle
-import com.aditya.reactivepresenterarchitecture.manager.ReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ReactivePresenter
 import rx.Observable
 import rx.Scheduler
 import java.util.concurrent.TimeUnit

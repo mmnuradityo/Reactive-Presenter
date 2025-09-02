@@ -1,7 +1,7 @@
 package com.aditya.reactivepresenterarchitecture.ui
 
 import androidx.lifecycle.Lifecycle
-import com.aditya.reactivepresenterarchitecture.manager.ReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ReactivePresenter
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentPresenter
 import rx.android.schedulers.AndroidSchedulers

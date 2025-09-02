@@ -1,4 +1,4 @@
-package com.aditya.reactivepresenterarchitecture.manager
+package com.aditya.reactivepresenterarchitecture.reactive_presenter
 
 import android.util.Log
 import androidx.lifecycle.DefaultLifecycleObserver
