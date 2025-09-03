@@ -1,15 +1,12 @@
 package com.aditya.reactivepresenterarchitecture.ui.main
 
-import androidx.lifecycle.Lifecycle
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.ReactivePresenter
 import rx.Observable
 import rx.Scheduler
 import java.util.concurrent.TimeUnit
 
-class MainPresenter(
-    lifecycle: Lifecycle, schedulerObserver: Scheduler
-): ReactivePresenter<MainViewState>(
-    MainViewState.Empty, lifecycle, schedulerObserver
+class MainPresenter(schedulerObserver: Scheduler): ReactivePresenter<MainViewState>(
+    MainViewState.Empty, schedulerObserver
 ) {
 
     private val list = mutableListOf<String>()
@@ -25,10 +22,10 @@ class MainPresenter(
         val modelView = getViewState().getModelView()
         bindViewState(
             source = Observable.just(list).delay(5, TimeUnit.SECONDS),
-            loading = MainViewState.Loading(modelView),
             success = { newList ->
                 MainViewState.StringList(modelView.copy(list = newList))
             },
+            loading = MainViewState.Loading(modelView),
             error = {
                 MainViewState.Error(modelView.copy(error = it.message))
             }

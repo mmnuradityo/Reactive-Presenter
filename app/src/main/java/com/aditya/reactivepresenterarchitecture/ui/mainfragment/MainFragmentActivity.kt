@@ -7,25 +7,17 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.fragment.app.Fragment
 import com.aditya.reactivepresenterarchitecture.databinding.ActivityMainFragmentBinding
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterInjector
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterProvider
-import com.aditya.reactivepresenterarchitecture.ui.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.AFragment
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.BFragment
 
 const val FRAGMENT_KEY = "FRAGMENT_KEY"
 
-class MainFragmentActivity : AppCompatActivity(), PresenterInjector<MainFragmentPresenter> {
+class MainFragmentActivity : AppCompatActivity() {
 
-    private var currentFragment: Fragment? = AFragment.newInstance()
+    private val presenter: MainFragmentPresenter = PresenterFactory.getOrCreate()
     private lateinit var binding: ActivityMainFragmentBinding
-    private val presenter: MainFragmentPresenter = PresenterFactory.create(lifecycle)
-
-    override fun obtainPresenter(presenterClass: Class<*>): MainFragmentPresenter {
-        return PresenterProvider.obtain(
-            presenter, this, presenterClass
-        ) as MainFragmentPresenter
-    }
+    private var currentFragment: Fragment? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -46,7 +38,7 @@ class MainFragmentActivity : AppCompatActivity(), PresenterInjector<MainFragment
     }
 
     private fun initView() {
-        presenter.observeViewState {
+        presenter.observeViewState(lifecycle) {
             when (it) {
                 is MainFragmentViewState.Empty -> {
                     binding.tvText.text = "Greetings From Main"
@@ -65,7 +57,7 @@ class MainFragmentActivity : AppCompatActivity(), PresenterInjector<MainFragment
                 }
             }
         }
-        initFragment(currentFragment?.javaClass ?: AFragment::class.java)
+        initFragment(currentFragment?.javaClass)
     }
 
     private fun listener() {
@@ -77,28 +69,34 @@ class MainFragmentActivity : AppCompatActivity(), PresenterInjector<MainFragment
         }
     }
 
-    private fun initFragment(aClassFragment: Class<*>) {
-        val fragment = getOrCreateFragment(aClassFragment)
-        supportFragmentManager.beginTransaction()
-            .replace(binding.containerFragment.id, fragment, fragment.javaClass.simpleName)
-            .commit()
-        currentFragment = fragment
-    }
-
-    private fun getOrCreateFragment(aClassFragment: Class<*>): Fragment {
+    private fun initFragment(aClassFragment: Class<*>?) {
         var fragment: Fragment? = null
+
+        val transaction = supportFragmentManager.beginTransaction()
         supportFragmentManager.fragments.forEach {
-            if (it.javaClass == aClassFragment) {
+            if (aClassFragment != null && it.javaClass == aClassFragment) {
                 fragment = it
+            } else if (currentFragment == null && it.isAdded && !it.isHidden) {
+                fragment = it
+            } else {
+                transaction.hide(it)
             }
         }
+
         if (fragment == null) {
-            when (aClassFragment) {
-                AFragment::class.java -> fragment = AFragment.newInstance()
-                BFragment::class.java -> fragment = BFragment.newInstance()
+            fragment = when (aClassFragment) {
+                BFragment::class.java -> BFragment.newInstance()
+                else -> AFragment.newInstance()
             }
+            transaction.add(
+                binding.containerFragment.id, fragment!!, fragment!!.javaClass.simpleName
+            )
+        } else {
+            transaction.show(fragment!!)
         }
-        return fragment!!
+
+        transaction.commit()
+        currentFragment = fragment
     }
 
     override fun onResume() {
@@ -109,5 +107,6 @@ class MainFragmentActivity : AppCompatActivity(), PresenterInjector<MainFragment
     override fun onDestroy() {
         super.onDestroy()
         currentFragment = null
+
     }
 }

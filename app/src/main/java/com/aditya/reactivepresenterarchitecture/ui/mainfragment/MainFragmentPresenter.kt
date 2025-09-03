@@ -1,14 +1,11 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment
 
-import androidx.lifecycle.Lifecycle
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.MainFragmentComponentPresenter
 import rx.Observable
 import rx.Scheduler
 
-class MainFragmentPresenter(
-    lifecycle: Lifecycle, schedulerObserver: Scheduler,
-) : MainFragmentComponentPresenter(
-    MainFragmentViewState.Empty, lifecycle, schedulerObserver
+class MainFragmentPresenter(schedulerObserver: Scheduler) : MainFragmentComponentPresenter(
+    MainFragmentViewState.Empty, schedulerObserver
 ) {
 
     fun getData() {
@@ -16,10 +13,10 @@ class MainFragmentPresenter(
         bindViewState(
             source = Observable.just("OK from Activity Main Fragment")
                 .delay(5, java.util.concurrent.TimeUnit.SECONDS),
-            loading = MainFragmentViewState.Loading(modelView),
             success = { newData ->
                 MainFragmentViewState.Data(modelView.copy(result = newData))
             },
+            loading = MainFragmentViewState.Loading(modelView),
             error = {
                 MainFragmentViewState.Error(modelView.copy(error = it.message))
             }

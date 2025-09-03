@@ -7,11 +7,11 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.aditya.reactivepresenterarchitecture.R
 import com.aditya.reactivepresenterarchitecture.databinding.ActivityMainBinding
-import com.aditya.reactivepresenterarchitecture.ui.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
 
 class MainActivity : AppCompatActivity() {
 
-    private val presenter: MainPresenter = PresenterFactory.create(lifecycle)
+    private val presenter: MainPresenter = PresenterFactory.getOrCreate()
     private lateinit var binding: ActivityMainBinding
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -32,7 +32,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        presenter.observeViewState {
+        presenter.observeViewState(lifecycle) {
             when (it) {
                 is MainViewState.Empty -> {
                     binding.tvText.text = "Greetings"

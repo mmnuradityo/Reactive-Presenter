@@ -6,12 +6,24 @@ abstract class ViewState<MV: ModelView>(
     fun getModelView(): MV = modelView
 }
 
-abstract class ModelView {
-    private var isDone: Boolean = false
+abstract class ComponentViewState<MV : ModelView>(
+    modelView: MV
+): ViewState<MV>(modelView) {
+    private var _key: String = ""
 
-    fun setDone(isDone: Boolean) {
-        this.isDone = isDone
+    fun setComponentKey(key: String) {
+        this._key = key
     }
 
-    fun isDone(): Boolean = isDone
+    fun getComponentKey(): String = _key
+}
+
+abstract class ModelView {
+    private var isConsume: Boolean = false
+
+    fun setConsume(isConsumer: Boolean) {
+        this.isConsume = isConsumer
+    }
+
+    fun isConsume(): Boolean = isConsume
 }

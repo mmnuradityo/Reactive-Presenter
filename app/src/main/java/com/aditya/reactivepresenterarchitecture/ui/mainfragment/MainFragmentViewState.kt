@@ -1,5 +1,6 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment;
 
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ComponentViewState
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.ModelView
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.ViewState
 
@@ -37,15 +38,13 @@ data class MainFragmentComponentModelView(
 
 sealed class MainFragmentComponentViewState(
     modelView: MainFragmentComponentModelView,
-) : ViewState<MainFragmentComponentModelView>(modelView) {
+) : ComponentViewState<MainFragmentComponentModelView>(modelView) {
 
-    data object Empty : MainFragmentComponentViewState(
-        MainFragmentComponentModelView()
-    )
+    data object Empty : MainFragmentComponentViewState(MainFragmentComponentModelView())
 
     data class Loading(
         val model: MainFragmentComponentModelView,
-    ) : MainFragmentComponentViewState(model)
+    ) : MainFragmentComponentViewState( model)
 
     data class Data(
         val model: MainFragmentComponentModelView,
@@ -57,7 +56,7 @@ sealed class MainFragmentComponentViewState(
 
 }
 
-enum class MainFragmentPresenterKey(val value: String) {
-    A("ComponentA"),
-    B("ComponentB");
+enum class ComponentPresenterKey(val value: String) {
+    A("Component_A"),
+    B("Component_B");
 }

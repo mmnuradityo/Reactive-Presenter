@@ -11,7 +11,7 @@ import androidx.core.view.ViewCompat
 import androidx.core.view.WindowInsetsCompat
 import com.aditya.reactivepresenterarchitecture.R
 import com.aditya.reactivepresenterarchitecture.databinding.ActivityProfileTestBinding
-import com.aditya.reactivepresenterarchitecture.ui.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
 import com.aditya.reactivepresenterarchitecture.ui.main.MainActivity
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentActivity

@@ -1,10 +1,7 @@
 package com.aditya.reactivepresenterarchitecture.reactive_presenter
 
 import android.app.Activity
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
-import com.aditya.reactivepresenterarchitecture.ui.PresenterFactory
 import rx.Observable
 import rx.Scheduler
 import rx.functions.Action1
@@ -14,36 +11,22 @@ import rx.subscriptions.CompositeSubscription
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class ReactivePresenter<VS>(
-    state: VS, lifecycle: Lifecycle, protected val schedulerObserver: Scheduler
+    state: VS, protected val schedulerObserver: Scheduler
 ) where VS : ViewState<*> {
 
-    protected val lifecycleProvider = RxLifecycleProvider(lifecycle)
-    protected val subscriptions = CompositeSubscription()
+    private val subscriptions = CompositeSubscription()
+    private lateinit var lifecycleProvider: RxLifecycleProvider
     private val _viewState: BehaviorSubject<VS> = BehaviorSubject.create(state)
     private val viewState = _viewState.asObservable()
     private val isPaused = AtomicBoolean(false)
-
-    init {
-        lifecycleProvider.addLifecycleObserver(object : DefaultLifecycleObserver {
-            override fun onResume(owner: LifecycleOwner) {
-                isPaused.set(false)
-            }
-
-            override fun onPause(owner: LifecycleOwner) {
-                stop()
-            }
-
-            override fun onDestroy(owner: LifecycleOwner) {
-                if (owner is Activity && owner.isFinishing) destroy()
-            }
-        })
-    }
 
     fun getViewState(): VS {
         return _viewState.value
     }
 
-    fun observeViewState(observer: Observer<VS>) {
+    fun observeViewState(lifecycle: Lifecycle, observer: Observer<VS>) {
+        subscriptions.clear()
+        lifecycleProvider = lifecycleProvider(lifecycle)
         subscriptions.add(
             viewState
                 .distinctUntilChanged(this::validateNewValue)
@@ -51,35 +34,55 @@ abstract class ReactivePresenter<VS>(
                 .filter { !isPaused.get() }
                 .observeOn(schedulerObserver)
                 .subscribe {
-                    it.getModelView().setDone(true)
+                    it.getModelView().setConsume(true)
                     observer.call(it)
                 }
         )
     }
 
+    private fun lifecycleProvider(lifecycle: Lifecycle): RxLifecycleProvider {
+        return RxLifecycleProvider(lifecycle).apply {
+            subscriptions.add(lifecycleObservable.subscribe {
+                when (it.event) {
+                    Lifecycle.Event.ON_RESUME -> isPaused.set(false)
+                    Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
+                    Lifecycle.Event.ON_DESTROY -> {
+                        val owner = it.owner
+                        if (owner is Activity && owner.isFinishing) destroy()
+                    }
+
+                    else -> { /* ignored */
+                    }
+                }
+            })
+        }
+    }
+
     protected  open fun validateNewValue(
         oldState: ViewState<*>?, newState: ViewState<*>?
     ): Boolean {
-        if (oldState == null || newState == null) return true
-        return !newState.getModelView().isDone()
+        return if (newState == null) true
+        else if (oldState != null && oldState == newState) !newState.getModelView().isConsume()
+        else false
     }
 
     protected fun <T> bindViewState(
-        source: Observable<T>, loading: VS?, success: Func1<T, VS>?, error: Func1<Throwable, VS>?,
+        source: Observable<T>, success: Func1<T, VS>?, loading: VS?, error: Func1<Throwable, VS>?,
     ) {
         subscriptions.add(
-            transformViewState(source, loading, success, error)
+            transformViewState(source, success, loading, error)
                 .filter {
                     val isStart = !isPaused.get()
-                    it.getModelView().setDone(isStart)
+                    it.getModelView().setConsume(isStart)
                     isStart
                 }
+                .compose(lifecycleProvider.bindUntilPause())
                 .subscribe { _viewState.onNext(it) }
         )
     }
 
     protected open fun <T, R> transformViewState(
-        source: Observable<T>, loading: R?, success: Func1<T, R>?, error: Func1<Throwable, R>?
+        source: Observable<T>, success: Func1<T, R>?, loading: R?,  error: Func1<Throwable, R>?
     ): Observable<R> where R : ViewState<*> {
         return source
             .map(success)
@@ -89,12 +92,7 @@ abstract class ReactivePresenter<VS>(
                     if (it?.message == null) Exception("Unknown error") else it
                 )
             }
-            .compose(lifecycleProvider.bindUntilStop())
             .observeOn(schedulerObserver)
-    }
-
-    protected open fun stop() {
-        isPaused.set(true)
     }
 
     protected open fun destroy() {

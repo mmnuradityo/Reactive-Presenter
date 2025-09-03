@@ -1,21 +1,21 @@
 package com.aditya.reactivepresenterarchitecture.reactive_presenter
 
-import android.util.Log
-import androidx.lifecycle.DefaultLifecycleObserver
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event
 import rx.Observable
 
-class RxLifecycleProvider(
-    private val lifecycle: Lifecycle
-) {
+class RxLifecycleProvider(lifecycle: Lifecycle) {
 
-    private val lifecycleObservable = RxLifecycleOwner.from(lifecycle).share()
+    private val _lifecycleObservable = RxLifecycleOwner.from(lifecycle).share()
+    val lifecycleObservable: Observable<RxLifecycleEvent> = _lifecycleObservable.asObservable()
     private val stopTransformer = RxLifecycleTransformer<Event>(
-        lifecycleObservable.filter { event -> event === Event.ON_STOP }
+        _lifecycleObservable.filter { it.event === Event.ON_STOP }
     )
     private val destroyTransformer = RxLifecycleTransformer<Event>(
-        lifecycleObservable.filter { event -> event === Event.ON_DESTROY }
+        _lifecycleObservable.filter { it.event === Event.ON_DESTROY }
+    )
+    private val pauseTransformer = RxLifecycleTransformer<Event>(
+        _lifecycleObservable.filter { it.event === Event.ON_PAUSE }
     )
 
     @Suppress("UNCHECKED_CAST")
@@ -28,15 +28,9 @@ class RxLifecycleProvider(
         return destroyTransformer as RxLifecycleTransformer<T>
     }
 
-    fun lifecycleObservable(): Observable<Event> {
-        return lifecycleObservable
+    @Suppress("UNCHECKED_CAST")
+    fun <T> bindUntilPause(): RxLifecycleTransformer<T> {
+        return pauseTransformer as RxLifecycleTransformer<T>
     }
 
-    fun addLifecycleObserver(observer: DefaultLifecycleObserver) {
-        lifecycle.addObserver(observer)
-    }
-
-    protected fun finalize() {
-        Log.d("ProfileTestActivity", "RxLifecycleProvider deleted from GC: ${this.hashCode()}")
-    }
 }
