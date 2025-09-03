@@ -34,9 +34,9 @@ abstract class ReactivePresenter<VS>(
         lifecycleProvider = lifecycleProvider(lifecycle)
         subscriptions.add(
             viewState
+                .filter { !isPaused.get() }
                 .distinctUntilChanged(this::validateNewValue)
                 .compose(lifecycleProvider.bindUntilDestroy())
-                .filter { !isPaused.get() }
                 .observeOn(schedulerProvider.ui())
                 .subscribe {
                     it.getModelView().setConsume(true)

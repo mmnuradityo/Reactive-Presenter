@@ -39,11 +39,11 @@ abstract class CompositeReactivePresenter<VS, CS>(
         attachView(key)
 
         subscriptionObserver[key] = componentState
+            .filter { !isComponentPaused.get() }
             .distinctUntilChanged { old, new ->
                key != componentKey.get() || validateNewValue(old[key], new[key])
             }
             .map { it[key] }
-            .filter { !isComponentPaused.get() && it != null }
             .compose(lifecycleComponentProvider[key]?.bindUntilDestroy())
             .observeOn(schedulerProvider.ui())
             .subscribe {
@@ -70,20 +70,19 @@ abstract class CompositeReactivePresenter<VS, CS>(
         }
     }
 
-
     protected fun <T> bindComponentState(
         source: Observable<T>, success: Func1<T, CS>?, loading: CS?, error: Func1<Throwable, CS>?
     ) {
         val key = componentKey.get()
         componentSubscriptions.add(
             transformViewState(source, success, loading, error)
+                .filter { !isComponentPaused.get() && key == componentKey.get() }
                 .map {
                     it.apply {
                         setComponentKey(key)
                         getModelView().setConsume(false)
                     }
                 }
-                .filter { !isComponentPaused.get() && it.getComponentKey() == componentKey.get() }
                 .compose(lifecycleComponentProvider[componentKey.get()]?.bindUntilPause())
                 .subscribe {
                     componentStates[it.getComponentKey()] = it

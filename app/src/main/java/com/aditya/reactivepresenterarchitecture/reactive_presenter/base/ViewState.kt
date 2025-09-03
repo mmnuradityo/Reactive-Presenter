@@ -21,8 +21,8 @@ abstract class ComponentViewState<MV : ModelView>(
 abstract class ModelView {
     private var isConsume: Boolean = false
 
-    fun setConsume(isConsumer: Boolean) {
-        this.isConsume = isConsumer
+    fun setConsume(isConsume: Boolean) {
+        this.isConsume = isConsume
     }
 
     fun isConsume(): Boolean = isConsume
