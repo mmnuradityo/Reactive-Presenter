@@ -1,9 +1,14 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter
+package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
 
 import android.app.Activity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.RxLifecycleProvider
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.SchedulerProvider
 import rx.Observable
-import rx.Scheduler
 import rx.functions.Action1
 import rx.functions.Func1
 import rx.subjects.BehaviorSubject
@@ -11,7 +16,7 @@ import rx.subscriptions.CompositeSubscription
 import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class ReactivePresenter<VS>(
-    state: VS, protected val schedulerObserver: Scheduler
+    state: VS, protected val schedulerProvider: ISchedulerProvider = SchedulerProvider()
 ) where VS : ViewState<*> {
 
     private val subscriptions = CompositeSubscription()
@@ -32,7 +37,7 @@ abstract class ReactivePresenter<VS>(
                 .distinctUntilChanged(this::validateNewValue)
                 .compose(lifecycleProvider.bindUntilDestroy())
                 .filter { !isPaused.get() }
-                .observeOn(schedulerObserver)
+                .observeOn(schedulerProvider.ui())
                 .subscribe {
                     it.getModelView().setConsume(true)
                     observer.call(it)
@@ -42,7 +47,10 @@ abstract class ReactivePresenter<VS>(
 
     private fun lifecycleProvider(lifecycle: Lifecycle): RxLifecycleProvider {
         return RxLifecycleProvider(lifecycle).apply {
-            subscriptions.add(lifecycleObservable.subscribe {
+            subscriptions.add(lifecycleObservable
+                .observeOn(schedulerProvider.ui())
+                .filter { validateOwner(it.owner) }
+                .subscribe {
                 when (it.event) {
                     Lifecycle.Event.ON_RESUME -> isPaused.set(false)
                     Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
@@ -56,6 +64,15 @@ abstract class ReactivePresenter<VS>(
                 }
             })
         }
+    }
+
+    open fun validateOwner(owner: LifecycleOwner): Boolean {
+        if (owner is Fragment) {
+            if (owner.isHidden || !owner.isVisible || !owner.isAdded || owner.isRemoving) {
+                return false
+            }
+        }
+        return true
     }
 
     protected  open fun validateNewValue(
@@ -85,6 +102,7 @@ abstract class ReactivePresenter<VS>(
         source: Observable<T>, success: Func1<T, R>?, loading: R?,  error: Func1<Throwable, R>?
     ): Observable<R> where R : ViewState<*> {
         return source
+            .subscribeOn(schedulerProvider.io())
             .map(success)
             .startWith(loading)
             .onErrorReturn {
@@ -92,7 +110,6 @@ abstract class ReactivePresenter<VS>(
                     if (it?.message == null) Exception("Unknown error") else it
                 )
             }
-            .observeOn(schedulerObserver)
     }
 
     protected open fun destroy() {

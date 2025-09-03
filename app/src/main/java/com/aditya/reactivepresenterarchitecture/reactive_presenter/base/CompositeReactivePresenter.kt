@@ -1,10 +1,10 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter
+package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
 
-import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleOwner
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.RxLifecycleProvider
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.SchedulerProvider
 import rx.Observable
-import rx.Scheduler
 import rx.Subscription
 import rx.functions.Func1
 import rx.subjects.BehaviorSubject
@@ -15,10 +15,9 @@ import java.util.concurrent.atomic.AtomicReference
 abstract class CompositeReactivePresenter<VS, CS>(
     state: VS,
     private val componentStates: MutableMap<String, CS>,
-    schedulerObserver: Scheduler,
-) : ReactivePresenter<VS>(
-    state, schedulerObserver
-), ICompositeReactivePresenter<CS> where VS : ViewState<*>, CS : ComponentViewState<*> {
+    schedulerProvider: ISchedulerProvider = SchedulerProvider(),
+) : ReactivePresenter<VS>(state, schedulerProvider),
+    ICompositeReactivePresenter<CS> where VS : ViewState<*>, CS : ComponentViewState<*> {
 
     private var lifecycleComponentProvider: MutableMap<String, RxLifecycleProvider> = mutableMapOf()
     private var subscriptionObserver: MutableMap<String, Subscription> = mutableMapOf()
@@ -46,7 +45,7 @@ abstract class CompositeReactivePresenter<VS, CS>(
             .map { it[key] }
             .filter { !isComponentPaused.get() && it != null }
             .compose(lifecycleComponentProvider[key]?.bindUntilDestroy())
-            .observeOn(schedulerObserver)
+            .observeOn(schedulerProvider.ui())
             .subscribe {
                 if (it == null) return@subscribe
                 observer.call(it)
@@ -59,6 +58,7 @@ abstract class CompositeReactivePresenter<VS, CS>(
             val eventKey = "${key}_event"
             subscriptionObserver[eventKey]?.unsubscribe()
             subscriptionObserver[eventKey] = lifecycleObservable
+                .observeOn(schedulerProvider.ui())
                 .filter { validateOwner(it.owner) }
                 .subscribe {
                     when (it.event) {
@@ -70,14 +70,6 @@ abstract class CompositeReactivePresenter<VS, CS>(
         }
     }
 
-    private fun validateOwner(owner: LifecycleOwner): Boolean {
-        if (owner is Fragment) {
-            if (owner.isHidden || !owner.isVisible || !owner.isAdded || owner.isRemoving) {
-                return false
-            }
-        }
-        return true
-    }
 
     protected fun <T> bindComponentState(
         source: Observable<T>, success: Func1<T, CS>?, loading: CS?, error: Func1<Throwable, CS>?

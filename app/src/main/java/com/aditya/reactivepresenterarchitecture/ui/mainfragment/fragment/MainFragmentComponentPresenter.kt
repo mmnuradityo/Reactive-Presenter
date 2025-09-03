@@ -1,25 +1,22 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment
 
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ICompositeReactivePresenter
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.CompositeReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.CompositeReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ICompositeReactivePresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.ComponentPresenterKey
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentComponentModelView
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentComponentViewState
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentViewState
 import rx.Observable
-import rx.Scheduler
 import java.util.concurrent.TimeUnit
 
-abstract class MainFragmentComponentPresenter(
-    viewState: MainFragmentViewState, schedulerObserver: Scheduler
-): CompositeReactivePresenter<MainFragmentViewState, MainFragmentComponentViewState>(
-    viewState,
-    mutableMapOf(
-        ComponentPresenterKey.A.value to MainFragmentComponentViewState.Empty,
-        ComponentPresenterKey.B.value to MainFragmentComponentViewState.Empty
-    ),
-    schedulerObserver
-), IMainFragmentComponentPresenter {
+abstract class MainFragmentComponentPresenter(viewState: MainFragmentViewState) :
+    CompositeReactivePresenter<MainFragmentViewState, MainFragmentComponentViewState>(
+        viewState,
+        mutableMapOf(
+            ComponentPresenterKey.A.value to MainFragmentComponentViewState.Empty,
+            ComponentPresenterKey.B.value to MainFragmentComponentViewState.Empty
+        )
+    ), IMainFragmentComponentPresenter {
 
     override fun getDataComponent() {
         val modelView = getComponentModelView()
@@ -43,10 +40,11 @@ abstract class MainFragmentComponentPresenter(
     }
 
     private fun getComponentModelView(): MainFragmentComponentModelView {
-       return (getComponentState() ?: MainFragmentComponentViewState.Empty).getModelView()
+        return (getComponentState() ?: MainFragmentComponentViewState.Empty).getModelView()
     }
 }
 
-interface IMainFragmentComponentPresenter: ICompositeReactivePresenter<MainFragmentComponentViewState> {
+interface IMainFragmentComponentPresenter :
+    ICompositeReactivePresenter<MainFragmentComponentViewState> {
     fun getDataComponent()
 }

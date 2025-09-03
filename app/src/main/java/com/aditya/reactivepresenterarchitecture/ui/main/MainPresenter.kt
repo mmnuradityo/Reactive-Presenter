@@ -1,13 +1,10 @@
 package com.aditya.reactivepresenterarchitecture.ui.main
 
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ReactivePresenter
 import rx.Observable
-import rx.Scheduler
 import java.util.concurrent.TimeUnit
 
-class MainPresenter(schedulerObserver: Scheduler): ReactivePresenter<MainViewState>(
-    MainViewState.Empty, schedulerObserver
-) {
+class MainPresenter: ReactivePresenter<MainViewState>(MainViewState.Empty) {
 
     private val list = mutableListOf<String>()
 

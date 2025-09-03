@@ -1,8 +1,8 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment;
 
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ComponentViewState
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ModelView
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ViewState
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ComponentViewState
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelView
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState
 
 data class MainFragmentModelView(
     val result: String = "",

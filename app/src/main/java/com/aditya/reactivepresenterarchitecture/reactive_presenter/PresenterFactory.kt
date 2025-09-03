@@ -1,8 +1,8 @@
 package com.aditya.reactivepresenterarchitecture.reactive_presenter
 
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ReactivePresenter
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentPresenter
-import rx.android.schedulers.AndroidSchedulers
 
 object PresenterFactory {
 
@@ -12,10 +12,9 @@ object PresenterFactory {
     inline fun <reified P> getOrCreate(): P where P : ReactivePresenter<*> {
         val key = P::class.java.simpleName
         return presentersCache.getOrPut(P::class.java.simpleName) {
-            val scheduler = AndroidSchedulers.mainThread()
             when (key) {
-                MainPresenter::class.java.simpleName -> MainPresenter(scheduler)
-                MainFragmentPresenter::class.java.simpleName -> MainFragmentPresenter(scheduler)
+                MainPresenter::class.java.simpleName -> MainPresenter()
+                MainFragmentPresenter::class.java.simpleName -> MainFragmentPresenter()
                 else -> throw IllegalArgumentException("Unknown Presenter class: $key")
             }
         } as P

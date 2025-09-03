@@ -1,4 +1,4 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter
+package com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle
 
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.Lifecycle.Event

@@ -1,7 +1,7 @@
 package com.aditya.reactivepresenterarchitecture.ui.main
 
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ModelView
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.ViewState
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelView
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState
 
 data class MainModelView(
     val list: List<String> = emptyList(),

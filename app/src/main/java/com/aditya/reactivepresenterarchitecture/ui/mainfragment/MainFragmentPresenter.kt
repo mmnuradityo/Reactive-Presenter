@@ -2,11 +2,8 @@ package com.aditya.reactivepresenterarchitecture.ui.mainfragment
 
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.MainFragmentComponentPresenter
 import rx.Observable
-import rx.Scheduler
 
-class MainFragmentPresenter(schedulerObserver: Scheduler) : MainFragmentComponentPresenter(
-    MainFragmentViewState.Empty, schedulerObserver
-) {
+class MainFragmentPresenter : MainFragmentComponentPresenter(MainFragmentViewState.Empty) {
 
     fun getData() {
         val modelView = getViewState().getModelView()
