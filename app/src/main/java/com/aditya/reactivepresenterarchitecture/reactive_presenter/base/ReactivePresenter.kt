@@ -47,22 +47,21 @@ abstract class ReactivePresenter<VS>(
 
     private fun lifecycleProvider(lifecycle: Lifecycle): RxLifecycleProvider {
         return RxLifecycleProvider(lifecycle).apply {
-            subscriptions.add(lifecycleObservable
-                .observeOn(schedulerProvider.ui())
-                .filter { validateOwner(it.owner) }
-                .subscribe {
-                when (it.event) {
-                    Lifecycle.Event.ON_RESUME -> isPaused.set(false)
-                    Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
-                    Lifecycle.Event.ON_DESTROY -> {
-                        val owner = it.owner
-                        if (owner is Activity && owner.isFinishing) destroy()
-                    }
-
-                    else -> { /* ignored */
-                    }
-                }
-            })
+            subscriptions.add(
+                lifecycleObservable
+                    .observeOn(schedulerProvider.ui())
+                    .filter { validateOwner(it.owner) }
+                    .subscribe {
+                        when (it.event) {
+                            Lifecycle.Event.ON_RESUME -> isPaused.set(false)
+                            Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
+                            Lifecycle.Event.ON_DESTROY -> {
+                                val owner = it.owner
+                                if (owner is Activity && owner.isFinishing) destroy()
+                            }
+                            else -> { /* ignored */ }
+                        }
+                    })
         }
     }
 
