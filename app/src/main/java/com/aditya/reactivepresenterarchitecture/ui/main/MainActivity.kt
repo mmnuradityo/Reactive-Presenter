@@ -8,6 +8,7 @@ import androidx.core.view.WindowInsetsCompat
 import com.aditya.reactivepresenterarchitecture.R
 import com.aditya.reactivepresenterarchitecture.databinding.ActivityMainBinding
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.RxLifecycleProvider
 
 class MainActivity : AppCompatActivity() {
 
@@ -32,7 +33,7 @@ class MainActivity : AppCompatActivity() {
     }
 
     private fun initView() {
-        presenter.observeViewState(lifecycle) {
+        presenter.observeViewState(RxLifecycleProvider(lifecycle)) {
             when (it) {
                 is MainViewState.Empty -> {
                     binding.tvText.text = "Greetings"

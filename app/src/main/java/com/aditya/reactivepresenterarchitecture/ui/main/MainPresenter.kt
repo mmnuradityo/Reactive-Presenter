@@ -20,12 +20,17 @@ class MainPresenter: ReactivePresenter<MainViewState>(MainViewState.Empty) {
         bindViewState(
             source = Observable.just(list).delay(5, TimeUnit.SECONDS),
             success = { newList ->
-                MainViewState.StringList(modelView.copy(list = newList))
+                MainViewState.StringList(
+                    modelView.copy(list = newList)
+                )
             },
             loading = MainViewState.Loading(modelView),
             error = {
-                MainViewState.Error(modelView.copy(error = it.message))
+                MainViewState.Error(
+                    modelView.copy(error = it.message)
+                )
             }
         )
     }
+
 }

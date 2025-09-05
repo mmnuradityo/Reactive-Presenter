@@ -27,3 +27,7 @@ abstract class ModelView {
 
     fun isConsume(): Boolean = isConsume
 }
+
+data class DataResult<T>(private var data: T?) {
+    fun consume(): T? = data
+}

@@ -15,6 +15,7 @@ import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFact
 import com.aditya.reactivepresenterarchitecture.ui.main.MainActivity
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentActivity
+import com.aditya.reactivepresenterarchitecture.ui.nested.NestedActivity
 
 class ProfileTestActivity : AppCompatActivity() {
 
@@ -37,6 +38,11 @@ class ProfileTestActivity : AppCompatActivity() {
 
         binding.btnOpenMainFragment.setOnClickListener {
             val intent = Intent(this, MainFragmentActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnOpenNestedFragment.setOnClickListener {
+            val intent = Intent(this, NestedActivity::class.java)
             startActivity(intent)
         }
     }

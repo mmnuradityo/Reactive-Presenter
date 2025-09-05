@@ -1,7 +1,6 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment
 
 import android.os.Bundle
-import androidx.fragment.app.Fragment
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -9,11 +8,13 @@ import androidx.core.content.ContextCompat
 import com.aditya.reactivepresenterarchitecture.R
 import com.aditya.reactivepresenterarchitecture.databinding.FragmentLayoutBinding
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ui.BaseReactiveFragment
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.ComponentPresenterKey
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.FRAGMENT_KEY
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentComponentViewState
 
-class AFragment : Fragment() {
+class AFragment : BaseReactiveFragment<IMainFragmentComponentPresenter>(ComponentPresenterKey.A.value) {
 
     companion object {
         @JvmStatic
@@ -23,19 +24,25 @@ class AFragment : Fragment() {
             }
         }
     }
-    private val presenter: IMainFragmentComponentPresenter = PresenterFactory.obtain()
     private lateinit var binding: FragmentLayoutBinding
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
-    ): View {
+    override fun onPresenter(): IMainFragmentComponentPresenter = PresenterFactory.obtain()
+
+    override fun createView(inflater: LayoutInflater, container: ViewGroup?): View {
         binding = FragmentLayoutBinding.inflate(inflater, container, false)
         return binding.root
     }
 
-    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
-        super.onViewCreated(view, savedInstanceState)
-        presenter.observeComponentState(ComponentPresenterKey.A.value, lifecycle) {
+    override fun initViews(view: View, savedInstanceState: Bundle?) {
+        context?.let {
+            binding.root.setBackgroundColor(
+                ContextCompat.getColor(it, R.color.pink)
+            )
+        }
+    }
+
+    override fun observeState(presenterKey: String, lifecycleProvider: IRxLifecycleProvider) {
+        presenter.observeComponentState(presenterKey, lifecycleProvider) {
             when (it) {
                 is MainFragmentComponentViewState.Empty -> {
                     binding.tvText.text = "Greetings from A"
@@ -54,15 +61,11 @@ class AFragment : Fragment() {
                 }
             }
         }
-        context?.let {
-            binding.root.setBackgroundColor(
-                ContextCompat.getColor(it, R.color.pink)
-            )
-        }
     }
 
     override fun onResume() {
         super.onResume()
+        presenter.attachView(ComponentPresenterKey.A.value)
         presenter.getDataComponent()
     }
 
@@ -72,7 +75,7 @@ class AFragment : Fragment() {
             presenter.attachView(ComponentPresenterKey.A.value)
             presenter.getDataComponent()
         } else {
-            presenter.detachView()
+            presenter.detachView(ComponentPresenterKey.A.value)
         }
     }
 

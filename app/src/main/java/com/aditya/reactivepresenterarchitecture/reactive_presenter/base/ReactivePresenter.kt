@@ -5,8 +5,8 @@ import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.RxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.SchedulerProvider
 import rx.Observable
 import rx.functions.Action1
@@ -17,10 +17,10 @@ import java.util.concurrent.atomic.AtomicBoolean
 
 abstract class ReactivePresenter<VS>(
     state: VS, protected val schedulerProvider: ISchedulerProvider = SchedulerProvider()
-) where VS : ViewState<*> {
+): IReactivePresenter where VS : ViewState<*> {
 
     private val subscriptions = CompositeSubscription()
-    private lateinit var lifecycleProvider: RxLifecycleProvider
+    private lateinit var lifecycleProvider: IRxLifecycleProvider
     private val _viewState: BehaviorSubject<VS> = BehaviorSubject.create(state)
     private val viewState = _viewState.asObservable()
     private val isPaused = AtomicBoolean(false)
@@ -29,48 +29,51 @@ abstract class ReactivePresenter<VS>(
         return _viewState.value
     }
 
-    fun observeViewState(lifecycle: Lifecycle, observer: Observer<VS>) {
+    fun observeViewState(lifecycleProvider: IRxLifecycleProvider, observer: Observer<VS>) {
         subscriptions.clear()
-        lifecycleProvider = lifecycleProvider(lifecycle)
+        setupLifecycleProvider(lifecycleProvider)
         subscriptions.add(
             viewState
-                .filter { !isPaused.get() }
+                .filter { !isPaused.get() && !it.getModelView().isConsume() }
                 .distinctUntilChanged(this::validateNewValue)
                 .compose(lifecycleProvider.bindUntilDestroy())
                 .observeOn(schedulerProvider.ui())
                 .subscribe {
-                    it.getModelView().setConsume(true)
                     observer.call(it)
+                    it.getModelView().setConsume(true)
                 }
         )
     }
 
-    private fun lifecycleProvider(lifecycle: Lifecycle): RxLifecycleProvider {
-        return RxLifecycleProvider(lifecycle).apply {
-            subscriptions.add(
-                lifecycleObservable
-                    .observeOn(schedulerProvider.ui())
-                    .filter { validateOwner(it.owner) }
-                    .subscribe {
-                        when (it.event) {
-                            Lifecycle.Event.ON_RESUME -> isPaused.set(false)
-                            Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
-                            Lifecycle.Event.ON_DESTROY -> {
-                                val owner = it.owner
-                                if (owner is Activity && owner.isFinishing) destroy()
-                            }
-                            else -> { /* ignored */ }
+    private fun setupLifecycleProvider(lifecycleProvider: IRxLifecycleProvider) {
+        this.lifecycleProvider = lifecycleProvider
+        subscriptions.add(
+            lifecycleProvider.getLifecycleObservable()
+                .observeOn(schedulerProvider.ui())
+                .filter { validateOwner(it.owner) }
+                .subscribe {
+                    when (it.event) {
+                        Lifecycle.Event.ON_RESUME -> isPaused.set(false)
+                        Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
+                        Lifecycle.Event.ON_DESTROY -> {
+                            val owner = it.owner
+                            if (owner is Activity && owner.isFinishing) destroy()
                         }
-                    })
-        }
+
+                        else -> { /* ignored */
+                        }
+                    }
+                })
     }
 
     open fun validateOwner(owner: LifecycleOwner): Boolean {
-        if (owner is Fragment) {
-            if (owner.isHidden || !owner.isVisible || !owner.isAdded || owner.isRemoving) {
-                return false
-            }
+        if (owner !is Fragment) return true
+        val isActivityFinishing = owner.activity?.isFinishing == true
+        if (owner.isRemoving || isActivityFinishing) {
+            destroy()
+            return false
         }
+        if (!owner.isAdded || !owner.isVisible) return false
         return true
     }
 
@@ -83,15 +86,11 @@ abstract class ReactivePresenter<VS>(
     }
 
     protected fun <T> bindViewState(
-        source: Observable<T>, success: Func1<T, VS>?, loading: VS?, error: Func1<Throwable, VS>?,
+        source: Observable<T>, success: Func1<T, VS>?, loading: VS?, error: Func1<Throwable, VS>?
     ) {
         subscriptions.add(
             transformViewState(source, success, loading, error)
-                .filter {
-                    val isStart = !isPaused.get()
-                    it.getModelView().setConsume(isStart)
-                    isStart
-                }
+                .filter { !isPaused.get() }
                 .compose(lifecycleProvider.bindUntilPause())
                 .subscribe { _viewState.onNext(it) }
         )
@@ -105,17 +104,29 @@ abstract class ReactivePresenter<VS>(
             .map(success)
             .startWith(loading)
             .onErrorReturn {
-                error?.call(
-                    if (it?.message == null) Exception("Unknown error") else it
-                )
+                error?.call(if (it?.message == null) Exception("Unknown error") else it)
             }
+            .doOnNext { it.getModelView().setConsume(false) }
     }
 
     protected open fun destroy() {
         subscriptions.unsubscribe()
+        lifecycleProvider.removeObserver()
         PresenterFactory.destroy(this.javaClass.simpleName)
     }
 
+    override fun attachView(key: String) {
+        // ignored
+    }
+
+    override fun detachView(key: String) {
+        // ignored
+    }
+}
+
+interface IReactivePresenter {
+    fun attachView(key: String)
+    fun detachView(key: String)
 }
 
 fun interface Observer<VS> : Action1<VS> where VS : ViewState<*>

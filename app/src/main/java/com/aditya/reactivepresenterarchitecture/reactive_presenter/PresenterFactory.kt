@@ -3,6 +3,7 @@ package com.aditya.reactivepresenterarchitecture.reactive_presenter
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ReactivePresenter
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentPresenter
+import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.ParentPresenter
 
 object PresenterFactory {
 
@@ -15,6 +16,7 @@ object PresenterFactory {
             when (key) {
                 MainPresenter::class.java.simpleName -> MainPresenter()
                 MainFragmentPresenter::class.java.simpleName -> MainFragmentPresenter()
+                ParentPresenter::class.java.simpleName -> ParentPresenter()
                 else -> throw IllegalArgumentException("Unknown Presenter class: $key")
             }
         } as P

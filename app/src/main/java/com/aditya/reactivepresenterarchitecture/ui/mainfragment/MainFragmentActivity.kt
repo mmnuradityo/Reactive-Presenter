@@ -1,66 +1,33 @@
 package com.aditya.reactivepresenterarchitecture.ui.mainfragment
 
-import android.os.Bundle
-import androidx.activity.enableEdgeToEdge
-import androidx.appcompat.app.AppCompatActivity
-import androidx.core.view.ViewCompat
-import androidx.core.view.WindowInsetsCompat
+import android.view.View
 import androidx.fragment.app.Fragment
 import com.aditya.reactivepresenterarchitecture.databinding.ActivityMainFragmentBinding
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.ui.BaseReactiveActivity
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.AFragment
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.fragment.BFragment
 
 const val FRAGMENT_KEY = "FRAGMENT_KEY"
 
-class MainFragmentActivity : AppCompatActivity() {
+class MainFragmentActivity : BaseReactiveActivity<MainFragmentPresenter>() {
 
-    private val presenter: MainFragmentPresenter = PresenterFactory.getOrCreate()
     private lateinit var binding: ActivityMainFragmentBinding
     private var currentFragment: Fragment? = null
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-        onWindow()
-        initView()
-        listener()
-    }
+    override fun onPresenter(): MainFragmentPresenter = PresenterFactory.getOrCreate()
 
-    private fun onWindow() {
-        enableEdgeToEdge()
+    override fun onCreateView(): View {
         binding = ActivityMainFragmentBinding.inflate(layoutInflater)
-        setContentView(binding.root)
-        ViewCompat.setOnApplyWindowInsetsListener(binding.main) { v, insets ->
-            val systemBars = insets.getInsets(WindowInsetsCompat.Type.systemBars())
-            v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom)
-            insets
-        }
+        return binding.root
     }
 
-    private fun initView() {
-        presenter.observeViewState(lifecycle) {
-            when (it) {
-                is MainFragmentViewState.Empty -> {
-                    binding.tvText.text = "Greetings From Main"
-                }
-
-                is MainFragmentViewState.Loading -> {
-                    binding.tvText.text = it.getModelView().result.ifEmpty { "Loading Main...." }
-                }
-
-                is MainFragmentViewState.Data -> {
-                    binding.tvText.text = it.getModelView().result
-                }
-
-                is MainFragmentViewState.Error -> {
-                    binding.tvText.text = it.getModelView().error
-                }
-            }
-        }
+    override fun initViews() {
         initFragment(currentFragment?.javaClass)
     }
 
-    private fun listener() {
+    override fun listener() {
         binding.btnOpenAFragment.setOnClickListener {
             initFragment(AFragment::class.java)
         }
@@ -99,6 +66,28 @@ class MainFragmentActivity : AppCompatActivity() {
         currentFragment = fragment
     }
 
+    override fun observeState(lifecycleProvider: IRxLifecycleProvider) {
+        presenter.observeViewState(lifecycleProvider) {
+            when (it) {
+                is MainFragmentViewState.Empty -> {
+                    binding.tvText.text = "Greetings From Main"
+                }
+
+                is MainFragmentViewState.Loading -> {
+                    binding.tvText.text = it.getModelView().result.ifEmpty { "Loading Main...." }
+                }
+
+                is MainFragmentViewState.Data -> {
+                    binding.tvText.text = it.getModelView().result
+                }
+
+                is MainFragmentViewState.Error -> {
+                    binding.tvText.text = it.getModelView().error
+                }
+            }
+        }
+    }
+
     override fun onResume() {
         super.onResume()
         presenter.getData()
@@ -107,6 +96,6 @@ class MainFragmentActivity : AppCompatActivity() {
     override fun onDestroy() {
         super.onDestroy()
         currentFragment = null
-
     }
+
 }
