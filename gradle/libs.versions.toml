@@ -12,6 +12,8 @@ constraintlayout = "2.2.1"
 rxjava = "1.3.8"
 rxandroid = "1.2.1"
 leakcanary = "2.14"
+junitJupiter = "5.9.3"
+mockk = "1.13.9"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -25,6 +27,8 @@ androidx-constraintlayout = { group = "androidx.constraintlayout", name = "const
 rxjava = { group = "io.reactivex", name = "rxjava", version.ref = "rxjava" }
 rxandroid = { group = "io.reactivex", name = "rxandroid", version.ref = "rxandroid" }
 leakcanary-android = { group = "com.squareup.leakcanary", name = "leakcanary-android", version.ref = "leakcanary" }
+junit-jupiter = { group = "org.junit.jupiter", name = "junit-jupiter", version.ref = "junitJupiter" }
+mockk = { group = "io.mockk", name = "mockk", version.ref = "mockk" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

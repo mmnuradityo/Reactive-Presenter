@@ -22,12 +22,12 @@ data class ChildModelView<T>(
 ): ModelView()
 
 sealed class ChildViewState<T>(
-    modelView: ChildModelView<T>
-): ComponentViewState<ChildModelView<T>>(modelView) {
-    data class Empty<T>(val model: ChildModelView<T> = ChildModelView()) : ChildViewState<T>(model)
-    data class Loading<T>(val model: ChildModelView<T>) : ChildViewState<T>(model)
-    data class Data<T>(val model: ChildModelView<T>) : ChildViewState<T>(model)
-    data class Error<T>(val model: ChildModelView<T>) : ChildViewState<T>(model)
+    id: Int, modelView: ChildModelView<T>
+): ComponentViewState<ChildModelView<T>>(id, modelView) {
+    data class Empty<T>(val model: ChildModelView<T> = ChildModelView()) : ChildViewState<T>(0,model)
+    data class Loading<T>(val model: ChildModelView<T>) : ChildViewState<T>(1,model)
+    data class Data<T>(val model: ChildModelView<T>) : ChildViewState<T>(2,model)
+    data class Error<T>(val model: ChildModelView<T>) : ChildViewState<T>(3,model)
 }
 
 enum class ChildComponentKey(val value: String) {

@@ -45,11 +45,11 @@ class BFragment : BaseReactiveFragment<IMainFragmentComponentPresenter>(Componen
         presenter.observeComponentState(presenterKey, lifecycleProvider) {
             when (it) {
                 is MainFragmentComponentViewState.Empty -> {
-                    binding.tvText.text = "Greetings from B"
+                    binding.tvText.text = "Greetings from $presenterKey"
                 }
 
                 is MainFragmentComponentViewState.Loading -> {
-                    binding.tvText.text = it.getModelView().result.ifEmpty { "Loading B...." }
+                    binding.tvText.text = it.getModelView().result.ifEmpty { "Loading $presenterKey...." }
                 }
 
                 is MainFragmentComponentViewState.Data -> {
@@ -65,14 +65,14 @@ class BFragment : BaseReactiveFragment<IMainFragmentComponentPresenter>(Componen
 
     override fun onResume() {
         super.onResume()
-        presenter.getDataComponent()
+        presenter.getDataComponent(presenterKey)
     }
 
     override fun onHiddenChanged(hidden: Boolean) {
         super.onHiddenChanged(hidden)
         if (!hidden) {
             presenter.attachView(presenterKey)
-            presenter.getDataComponent()
+            presenter.getDataComponent(presenterKey)
         } else {
             presenter.detachView(presenterKey)
 

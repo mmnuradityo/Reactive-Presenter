@@ -40,4 +40,9 @@ abstract class BaseReactiveFragment<P>(
         this.presenter.attachView(presenterKey)
     }
 
+    override fun onPause() {
+        super.onPause()
+        this.presenter.detachView(presenterKey)
+    }
+
 }

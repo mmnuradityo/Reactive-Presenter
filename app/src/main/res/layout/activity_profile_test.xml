@@ -37,9 +37,21 @@
         android:layout_marginTop="16dp"
         android:text="Open Nested Fragment"
         app:layout_constraintVertical_chainStyle="packed"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/btnOpenMainFragment"
+        app:layout_constraintBottom_toBottomOf="@+id/btnOpenSmartNotif"/>
+
+    <Button
+        android:id="@+id/btnOpenSmartNotif"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="16dp"
+        android:text="Open Smart Notification"
+        app:layout_constraintVertical_chainStyle="packed"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/btnOpenMainFragment" />
+        app:layout_constraintTop_toBottomOf="@+id/btnOpenNestedFragment" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

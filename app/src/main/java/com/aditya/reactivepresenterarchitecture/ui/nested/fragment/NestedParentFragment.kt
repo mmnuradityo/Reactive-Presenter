@@ -12,6 +12,7 @@ import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRx
 import com.aditya.reactivepresenterarchitecture.ui.nested.NESTED_FRAGMENT_KEY
 import com.aditya.reactivepresenterarchitecture.ui.nested.ViewPagerAdapter
 import com.google.android.material.tabs.TabLayoutMediator
+import androidx.core.view.isGone
 
 class NestedParentFragment : BaseReactiveFragment<ParentPresenter>() {
 
@@ -68,7 +69,7 @@ class NestedParentFragment : BaseReactiveFragment<ParentPresenter>() {
                 }
                 is ParentViewState.Success -> {
                     binding?.let {
-                        if (it.progressBarContainer.visibility == View.GONE) return@let
+                        if (it.progressBarContainer.isGone) return@let
                         it.progressBarContainer.visibility = View.GONE
                     }
                 }

@@ -29,13 +29,17 @@ abstract class ReactivePresenter<VS>(
         return _viewState.value
     }
 
+    fun emitVewState(newViewState: VS?) {
+        _viewState.onNext(newViewState)
+    }
+
     fun observeViewState(lifecycleProvider: IRxLifecycleProvider, observer: Observer<VS>) {
         subscriptions.clear()
         setupLifecycleProvider(lifecycleProvider)
         subscriptions.add(
             viewState
-                .filter { !isPaused.get() && !it.getModelView().isConsume() }
-                .distinctUntilChanged(this::validateNewValue)
+                .filter { !isPaused.get() && it != null && !it.getModelView().isConsume() }
+                .distinctUntilChanged(this::validateSameValue)
                 .compose(lifecycleProvider.bindUntilDestroy())
                 .observeOn(schedulerProvider.ui())
                 .subscribe {
@@ -59,9 +63,7 @@ abstract class ReactivePresenter<VS>(
                             val owner = it.owner
                             if (owner is Activity && owner.isFinishing) destroy()
                         }
-
-                        else -> { /* ignored */
-                        }
+                        else -> { /* ignored */ }
                     }
                 })
     }
@@ -77,11 +79,12 @@ abstract class ReactivePresenter<VS>(
         return true
     }
 
-    protected  open fun validateNewValue(
+    protected open fun validateSameValue(
         oldState: ViewState<*>?, newState: ViewState<*>?
     ): Boolean {
-        return if (newState == null) true
-        else if (oldState != null && oldState == newState) !newState.getModelView().isConsume()
+        return  if (newState == null) true
+        else if (oldState == null) false
+        else if (oldState == newState) newState.getModelView().isConsume()
         else false
     }
 
@@ -92,7 +95,7 @@ abstract class ReactivePresenter<VS>(
             transformViewState(source, success, loading, error)
                 .filter { !isPaused.get() }
                 .compose(lifecycleProvider.bindUntilPause())
-                .subscribe { _viewState.onNext(it) }
+                .subscribe(this::emitVewState)
         )
     }
 
@@ -104,9 +107,15 @@ abstract class ReactivePresenter<VS>(
             .map(success)
             .startWith(loading)
             .onErrorReturn {
-                error?.call(if (it?.message == null) Exception("Unknown error") else it)
+                error?.call(
+                    if (it == null || it.message == null) Exception("Unknown error")
+                    else it
+                )
             }
-            .doOnNext { it.getModelView().setConsume(false) }
+            .doOnNext {
+                if (it == null) return@doOnNext
+                it.getModelView().setConsume(false)
+            }
     }
 
     protected open fun destroy() {
@@ -115,18 +124,11 @@ abstract class ReactivePresenter<VS>(
         PresenterFactory.destroy(this.javaClass.simpleName)
     }
 
-    override fun attachView(key: String) {
-        // ignored
-    }
-
-    override fun detachView(key: String) {
-        // ignored
-    }
 }
 
 interface IReactivePresenter {
-    fun attachView(key: String)
-    fun detachView(key: String)
+    fun attachView(key: String) { }
+    fun detachView(key: String) { }
 }
 
 fun interface Observer<VS> : Action1<VS> where VS : ViewState<*>

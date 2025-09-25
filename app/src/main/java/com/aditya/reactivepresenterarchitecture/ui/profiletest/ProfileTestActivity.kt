@@ -16,6 +16,7 @@ import com.aditya.reactivepresenterarchitecture.ui.main.MainActivity
 import com.aditya.reactivepresenterarchitecture.ui.main.MainPresenter
 import com.aditya.reactivepresenterarchitecture.ui.mainfragment.MainFragmentActivity
 import com.aditya.reactivepresenterarchitecture.ui.nested.NestedActivity
+import com.aditya.reactivepresenterarchitecture.ui.notif.NotificationActivity
 
 class ProfileTestActivity : AppCompatActivity() {
 
@@ -43,6 +44,11 @@ class ProfileTestActivity : AppCompatActivity() {
 
         binding.btnOpenNestedFragment.setOnClickListener {
             val intent = Intent(this, NestedActivity::class.java)
+            startActivity(intent)
+        }
+
+        binding.btnOpenSmartNotif.setOnClickListener {
+            val intent = Intent(this, NotificationActivity::class.java)
             startActivity(intent)
         }
     }

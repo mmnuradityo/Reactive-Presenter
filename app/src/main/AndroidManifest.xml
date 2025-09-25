@@ -15,6 +15,9 @@
         android:theme="@style/Theme.ReactivePresenterArchitecture"
         tools:targetApi="31">
         <activity
+            android:name=".ui.notif.NotificationActivity"
+            android:exported="false" />
+        <activity
             android:name=".ui.nested.NestedActivity"
             android:exported="false" />
         <activity

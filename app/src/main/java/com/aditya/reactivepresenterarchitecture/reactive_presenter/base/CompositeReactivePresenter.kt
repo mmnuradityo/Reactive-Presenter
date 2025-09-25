@@ -25,23 +25,26 @@ abstract class CompositeReactivePresenter<VS, CS>(
     )
     private val componentState = _componentState.asObservable()
     private val isComponentPaused = AtomicReference(mutableMapOf<String, Boolean>())
-    protected val componentKey = AtomicReference("")
 
-    override fun getComponentState(): CS? {
-        return _componentState.value?.get(componentKey.get())
+    override fun getComponentState(key: String): CS? {
+        return _componentState.value?.get(key)
+    }
+
+    override fun emitComponentState(key: String, newViewState: CS) {
+        if (key != newViewState.getComponentKey()) return
+        componentStates[key] = newViewState
+        _componentState.onNext(componentStates.toMap())
     }
 
     override fun observeComponentState(key: String, lifecycleProvider: IRxLifecycleProvider, observer: Observer<CS>) {
         subscriptionObserver[key]?.unsubscribe()
         setupLifecycleComponentProvider(key, lifecycleProvider)
-        if (key.isNotEmpty() && componentKey.get().isEmpty()) {
-            attachView(key)
-        }
+        if (key.isNotEmpty()) attachView(key)
 
         subscriptionObserver[key] = componentState
             .compose(lifecycleComponentProvider[key]?.bindUntilDestroy())
-            .filter { !(isComponentPaused.get()[key] ?: true) && key == componentKey.get() }
-            .distinctUntilChanged { old, new -> validateNewValue(old[key], new[key]) }
+            .filter(validatePaused(key))
+            .distinctUntilChanged { old, new -> validateSameValue(old[key], new[key]) }
             .map { it[key] }
             .observeOn(schedulerProvider.ui())
             .subscribe {
@@ -58,20 +61,7 @@ abstract class CompositeReactivePresenter<VS, CS>(
         subscriptionObserver[eventKey] = lifecycleProvider.getLifecycleObservable()
             .observeOn(schedulerProvider.ui())
             .filter { validateOwner(it.owner) }
-            .subscribe {
-                when (it.event) {
-//                    Lifecycle.Event.ON_CREATE -> attachView(key)
-                    Lifecycle.Event.ON_PAUSE -> detachView(key)
-                    else -> { /* ignored */
-                    }
-                }
-            }
-    }
-
-    protected fun <T> bindComponentState(
-        source: Observable<T>, success: Func1<T, CS>?, loading: CS?, error: Func1<Throwable, CS>?
-    ) {
-        bindComponentState(componentKey.get(), source, success, loading, error)
+            .subscribe { if (it.event == Lifecycle.Event.ON_DESTROY ) destroy() }
     }
 
     protected fun <T> bindComponentState(
@@ -79,24 +69,23 @@ abstract class CompositeReactivePresenter<VS, CS>(
     ) {
         componentSubscriptions.add(
             Pair(key, transformViewState(source, success, loading, error)
-                .filter { !(isComponentPaused.get()[key] ?: true) && key == componentKey.get() }
+                .filter(validatePaused(key))
                 .map {
                     it.setComponentKey(key)
                     it
                 }
                 .compose(lifecycleComponentProvider[key]?.bindUntilPause())
-                .subscribe {
-                    componentStates[it.getComponentKey()] = it
-                    _componentState.onNext(componentStates.toMap())
-                }
+                .subscribe { emitComponentState(key, it) }
             )
         )
     }
 
+    private fun <T> validatePaused(key: String) = Func1<T, Boolean> {
+        !(isComponentPaused.get()[key] ?: true)
+    }
+
     override fun attachView(key: String) {
-        if (key.isEmpty()) return
-        componentKey.set(key)
-        isComponentPaused.get()[key] = false
+        if (key.isNotEmpty()) isComponentPaused.get()[key] = false
     }
 
     override fun detachView(key: String) {
@@ -130,6 +119,7 @@ abstract class CompositeReactivePresenter<VS, CS>(
 }
 
 interface ICompositeReactivePresenter<CS>: IReactivePresenter where CS : ComponentViewState<*> {
-    fun getComponentState(): CS?
+    fun getComponentState(key: String): CS?
+    fun emitComponentState(key: String, newViewState: CS)
     fun observeComponentState(key: String, lifecycleProvider: IRxLifecycleProvider, observer: Observer<CS>)
 }

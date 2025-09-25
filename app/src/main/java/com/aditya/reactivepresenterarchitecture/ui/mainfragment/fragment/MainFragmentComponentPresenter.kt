@@ -18,10 +18,11 @@ abstract class MainFragmentComponentPresenter(viewState: MainFragmentViewState) 
         )
     ), IMainFragmentComponentPresenter {
 
-    override fun getDataComponent() {
-        val modelView = getComponentModelView()
+    override fun getDataComponent(key: String) {
+        val modelView = getComponentModelView(key)
         bindComponentState(
-            source = Observable.just("OK from ${componentKey.get()}")
+            key = key,
+            source = Observable.just("OK from $key")
                 .delay(5, TimeUnit.SECONDS),
             success = { newData ->
                 MainFragmentComponentViewState.Data(
@@ -39,12 +40,11 @@ abstract class MainFragmentComponentPresenter(viewState: MainFragmentViewState) 
         )
     }
 
-    private fun getComponentModelView(): MainFragmentComponentModelView {
-        return (getComponentState() ?: MainFragmentComponentViewState.Empty).getModelView()
+    private fun getComponentModelView(key: String): MainFragmentComponentModelView {
+        return (getComponentState(key) ?: MainFragmentComponentViewState.Empty).getModelView()
     }
 }
 
-interface IMainFragmentComponentPresenter :
-    ICompositeReactivePresenter<MainFragmentComponentViewState> {
-    fun getDataComponent()
+interface IMainFragmentComponentPresenter : ICompositeReactivePresenter<MainFragmentComponentViewState> {
+    fun getDataComponent(key: String)
 }

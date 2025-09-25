@@ -36,6 +36,10 @@ android {
     buildFeatures {
         viewBinding = true
     }
+    tasks.withType<Test> {
+        useJUnitPlatform()
+        jvmArgs("-XX:+EnableDynamicAgentLoading")
+    }
 }
 
 dependencies {
@@ -52,6 +56,8 @@ dependencies {
     debugImplementation(libs.leakcanary.android)
 
     testImplementation(libs.junit)
+    testImplementation(libs.junit.jupiter)
+    testImplementation(libs.mockk)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
 }

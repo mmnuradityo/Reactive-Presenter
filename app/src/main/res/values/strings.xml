@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">Reactive Presenter Architecture</string>
-    <!-- TODO: Remove or change this placeholder text -->
-    <string name="hello_blank_fragment">Hello blank fragment</string>
+
+    <plurals name="summary_message_and_more">
+        <item quantity="one">and 1 more message</item>
+        <item quantity="other">and %d more messages</item>
+    </plurals>
 </resources>

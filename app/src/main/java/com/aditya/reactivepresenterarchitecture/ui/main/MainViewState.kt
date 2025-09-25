@@ -9,15 +9,15 @@ data class MainModelView(
 ) : ModelView()
 
 sealed class MainViewState(
-    modelView: MainModelView
-) : ViewState<MainModelView>(modelView) {
+    id: Int, modelView: MainModelView
+) : ViewState<MainModelView>(id, modelView) {
 
-    data object Empty : MainViewState(MainModelView())
+    data object Empty : MainViewState(0, MainModelView())
 
-    data class Loading(val model: MainModelView) : MainViewState(model)
+    data class Loading(val model: MainModelView) : MainViewState(1, model)
 
-    data class StringList(val model: MainModelView) : MainViewState(model)
+    data class StringList(val model: MainModelView) : MainViewState(2, model)
 
-    data class Error(val model: MainModelView) : MainViewState(model)
+    data class Error(val model: MainModelView) : MainViewState(3, model)
 
 }

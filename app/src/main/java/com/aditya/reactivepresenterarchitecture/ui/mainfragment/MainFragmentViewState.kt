@@ -10,24 +10,24 @@ data class MainFragmentModelView(
 ) : ModelView()
 
 sealed class MainFragmentViewState(
-    modelView: MainFragmentModelView,
-) : ViewState<MainFragmentModelView>(modelView) {
+    id: Int, modelView: MainFragmentModelView
+) : ViewState<MainFragmentModelView>(id, modelView) {
 
     data object Empty : MainFragmentViewState(
-        MainFragmentModelView()
+        0,MainFragmentModelView()
     )
 
     data class Loading(
         val model: MainFragmentModelView,
-    ) : MainFragmentViewState(model)
+    ) : MainFragmentViewState(1, model)
 
     data class Data(
         val model: MainFragmentModelView,
-    ) : MainFragmentViewState(model)
+    ) : MainFragmentViewState(2, model)
 
     data class Error(
         val model: MainFragmentModelView,
-    ) : MainFragmentViewState(model)
+    ) : MainFragmentViewState(3, model)
 
 }
 
@@ -37,22 +37,24 @@ data class MainFragmentComponentModelView(
 ) : ModelView()
 
 sealed class MainFragmentComponentViewState(
-    modelView: MainFragmentComponentModelView,
-) : ComponentViewState<MainFragmentComponentModelView>(modelView) {
+    id: Int, modelView: MainFragmentComponentModelView
+) : ComponentViewState<MainFragmentComponentModelView>(id, modelView) {
 
-    data object Empty : MainFragmentComponentViewState(MainFragmentComponentModelView())
+    data object Empty : MainFragmentComponentViewState(
+        0, MainFragmentComponentModelView()
+    )
 
     data class Loading(
         val model: MainFragmentComponentModelView,
-    ) : MainFragmentComponentViewState( model)
+    ) : MainFragmentComponentViewState( 1, model)
 
     data class Data(
         val model: MainFragmentComponentModelView,
-    ) : MainFragmentComponentViewState(model)
+    ) : MainFragmentComponentViewState(2, model)
 
     data class Error(
         val model: MainFragmentComponentModelView,
-    ) : MainFragmentComponentViewState(model)
+    ) : MainFragmentComponentViewState(3, model)
 
 }
 

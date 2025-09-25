@@ -18,7 +18,7 @@ abstract class ChildPresenter(
 ), IChildPresenter {
 
     override fun getList(key: String) {
-        val modelView = getComponentModelView<List<ListValueItem>>()
+        val modelView = getComponentModelView<List<ListValueItem>>(key)
         bindComponentState(
             key = key,
             source = Observable.just(
@@ -50,7 +50,7 @@ abstract class ChildPresenter(
     }
 
     override fun getDetail(key: String) {
-        val modelView = getComponentModelView<DetailValueItem>()
+        val modelView = getComponentModelView<DetailValueItem>(key)
         bindComponentState(
             key = key,
             source = Observable.just(
@@ -76,8 +76,8 @@ abstract class ChildPresenter(
     }
 
     @Suppress("UNCHECKED_CAST")
-    private fun <T> getComponentModelView(): ChildModelView<T> {
-        return (getComponentState() as? ChildViewState<T> ?: ChildViewState.Empty()).getModelView()
+    private fun <T> getComponentModelView(key: String): ChildModelView<T> {
+        return (getComponentState(key) as? ChildViewState<T> ?: ChildViewState.Empty()).getModelView()
     }
 
 }
