@@ -11,8 +11,8 @@ data class ListValueItem(
 )
 
 data class ListModel(
-    var state: Bundle? = null,
-    val list: List<ListValueItem> = emptyList()
+    val currentPage: Int = 0,
+    val list: MutableList<ListValueItem> = mutableListOf()
 )
 
 data class DetailModel(
@@ -23,6 +23,7 @@ data class DetailModel(
 )
 
 data class ChildModelView<T>(
+    var uiState: Bundle? = null,
     val result: DataResult<T>? = null,
     val error: String? = null,
 ): ModelView()

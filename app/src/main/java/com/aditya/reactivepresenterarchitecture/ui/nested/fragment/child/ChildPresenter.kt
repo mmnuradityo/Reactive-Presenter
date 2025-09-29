@@ -22,42 +22,21 @@ abstract class ChildPresenter(
         const val RV_LIST_STATE: String = "list_state"
     }
 
-    override fun getList(key: String) {
+    override fun getList(key: String, page: Int) {
         val modelView = getComponentModelView<ListModel>(key)
         bindComponentState(
             key = key,
-            source = Observable.just(
-                ListModel(
-                    list = listOf(
-                        ListValueItem(1L, "A"),
-                        ListValueItem(2L, "B"),
-                        ListValueItem(3L, "C"),
-                        ListValueItem(4L, "D"),
-                        ListValueItem(5L, "E"),
-                        ListValueItem(6L, "F"),
-                        ListValueItem(7L, "G"),
-                        ListValueItem(8L, "H"),
-                        ListValueItem(9L, "I"),
-                        ListValueItem(10L, "J"),
-                        ListValueItem(11L, "K"),
-                        ListValueItem(12L, "L"),
-                        ListValueItem(13L, "M"),
-                        ListValueItem(14L, "N"),
-                        ListValueItem(15L, "O"),
-                        ListValueItem(16L, "P"),
-                        ListValueItem(17L, "Q"),
-                        ListValueItem(18L, "R"),
-                        ListValueItem(19L, "S"),
-                        ListValueItem(20L, "T"),
-                        ListValueItem(21L, "U"),
-                        ListValueItem(22L, "V"),
-                        ListValueItem(23L, "W"),
-                        ListValueItem(24L, "x"),
-                        ListValueItem(25L, "Y"),
-                        ListValueItem(26L, "Z")
+            source = Observable.fromCallable {
+                val list = mutableListOf<ListValueItem>()
+                for (i in page until (page + 20)) {
+                    list.add(
+                        ListValueItem(i.toLong(), "Item $i")
                     )
+                }
+                ListModel(
+                    currentPage = page, list = list
                 )
-            ).delay(5, TimeUnit.SECONDS),
+            }.delay(5, TimeUnit.SECONDS),
             loading = ChildViewState.Loading(modelView),
             success = {
                 ChildViewState.Data(
@@ -99,17 +78,16 @@ abstract class ChildPresenter(
     }
 
     override fun saveState(key: String, savedState: Bundle?) {
-        if (savedState == null) return
-        val modelView = getComponentModelView<ListModel>(key)
+        val modelView: ChildModelView<*> = when (key) {
+            ChildComponentKey.CHILD_LIST.value -> getComponentModelView<ListModel>(key)
+            ChildComponentKey.CHILD_DETAIL.value -> getComponentModelView<DetailModel>(key)
+            else -> throw IllegalArgumentException("Unknown component key: $key")
+        }
 
         emitComponentState(
             key = key,
             newViewState = ChildViewState.StateChange(
-                modelView.copy(
-                    result = DataResult(
-                        data = modelView.result?.consume()?.copy(state = savedState)
-                    )
-                )
+                modelView.copy(uiState = savedState)
             ).apply {
                 setComponentKey(key)
             }
@@ -124,7 +102,7 @@ abstract class ChildPresenter(
 }
 
 interface IChildPresenter: ICompositeReactivePresenter<ChildViewState<*>> {
-    fun getList(key: String)
+    fun getList(key: String, page: Int)
     fun getDetail(key: String)
     fun saveState(key: String, savedState: Bundle?)
 }

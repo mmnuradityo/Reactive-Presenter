@@ -83,17 +83,17 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
 
                 is ChildViewState.StateChange -> {
                     binding?.let {
-                        val dataResult = state.getModelView().result?.consume() ?: return@let
-                        if (dataResult is ListModel) {
-                            val state = dataResult.state ?: return@let
-                            it.recyclerView.layoutManager?.onRestoreInstanceState(
-                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                                    state.getParcelable(ChildPresenter.RV_LIST_STATE, Parcelable::class.java)
-                                } else {
-                                    state.getParcelable(ChildPresenter.RV_LIST_STATE)
-                                }
-                            )
-                        }
+                        val uiState = state.getModelView().uiState ?: return@let
+                        it.recyclerView.layoutManager?.onRestoreInstanceState(
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                uiState.getParcelable(
+                                    ChildPresenter.RV_LIST_STATE, Parcelable::class.java
+                                )
+                            } else {
+                                uiState.getParcelable(ChildPresenter.RV_LIST_STATE)
+                            }
+                        )
+                        presenter.saveState(presenterKey, null)
                     }
                 }
 
@@ -121,7 +121,7 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
 
     override fun onResume() {
         super.onResume()
-        presenter.getList(presenterKey)
+        presenter.getList(presenterKey, 1)
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
