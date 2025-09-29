@@ -1,5 +1,6 @@
 package com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child
 
+import android.os.Bundle
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ComponentViewState
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.DataResult
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelView
@@ -9,7 +10,12 @@ data class ListValueItem(
     val text: String
 )
 
-data class DetailValueItem(
+data class ListModel(
+    var state: Bundle? = null,
+    val list: List<ListValueItem> = emptyList()
+)
+
+data class DetailModel(
     val id: Long,
     val title: String,
     val detail: String,
@@ -25,9 +31,10 @@ sealed class ChildViewState<T>(
     id: Int, modelView: ChildModelView<T>
 ): ComponentViewState<ChildModelView<T>>(id, modelView) {
     data class Empty<T>(val model: ChildModelView<T> = ChildModelView()) : ChildViewState<T>(0,model)
-    data class Loading<T>(val model: ChildModelView<T>) : ChildViewState<T>(1,model)
-    data class Data<T>(val model: ChildModelView<T>) : ChildViewState<T>(2,model)
-    data class Error<T>(val model: ChildModelView<T>) : ChildViewState<T>(3,model)
+    data class StateChange<T>(val model: ChildModelView<T>) : ChildViewState<T>(1,model)
+    data class Loading<T>(val model: ChildModelView<T>) : ChildViewState<T>(2,model)
+    data class Data<T>(val model: ChildModelView<T>) : ChildViewState<T>(3,model)
+    data class Error<T>(val model: ChildModelView<T>) : ChildViewState<T>(4,model)
 }
 
 enum class ChildComponentKey(val value: String) {

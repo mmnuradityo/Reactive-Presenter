@@ -1,10 +1,13 @@
 package com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.list
 
+import android.os.Build
 import android.os.Bundle
+import android.os.Parcelable
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView.Adapter.*
 import com.aditya.reactivepresenterarchitecture.databinding.FragmentNestedListBinding
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.PresenterFactory
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.ui.BaseReactiveFragment
@@ -12,14 +15,17 @@ import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.DataResu
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.ui.nested.NESTED_FRAGMENT_KEY
 import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.ChildComponentKey
+import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.ChildPresenter
 import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.ChildViewState
 import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.IChildPresenter
-import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.ListValueItem
+import com.aditya.reactivepresenterarchitecture.ui.nested.fragment.child.ListModel
 
 class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentKey.CHILD_LIST.value) {
 
     private var binding: FragmentNestedListBinding? = null
-    private val rvAdapter = RvAdapter()
+    private val rvAdapter = RvAdapter().apply {
+        stateRestorationPolicy = StateRestorationPolicy.PREVENT_WHEN_EMPTY
+    }
 
     companion object {
         @JvmStatic
@@ -38,9 +44,11 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
     }
 
     override fun initViews(view: View, savedInstanceState: Bundle?) {
-        binding?.recyclerView?.apply {
-            layoutManager = LinearLayoutManager(ctx)
-            adapter = rvAdapter
+        binding?.let {
+            it.recyclerView.apply {
+                layoutManager = LinearLayoutManager(ctx)
+                adapter = rvAdapter
+            }
         }
     }
 
@@ -73,6 +81,22 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
                     }
                 }
 
+                is ChildViewState.StateChange -> {
+                    binding?.let {
+                        val dataResult = state.getModelView().result?.consume() ?: return@let
+                        if (dataResult is ListModel) {
+                            val state = dataResult.state ?: return@let
+                            it.recyclerView.layoutManager?.onRestoreInstanceState(
+                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                                    state.getParcelable(ChildPresenter.RV_LIST_STATE, Parcelable::class.java)
+                                } else {
+                                    state.getParcelable(ChildPresenter.RV_LIST_STATE)
+                                }
+                            )
+                        }
+                    }
+                }
+
                 else -> { /* ignored */ }
             }
         }
@@ -81,23 +105,33 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
     private fun validateAndSetupList(result: DataResult<out Any?>?): Boolean {
         if (result == null) return false
         @Suppress("UNCHECKED_CAST")
-        setupList(result as DataResult<List<ListValueItem>>)
+        setupList(result as DataResult<ListModel>)
         return true
     }
 
-    private fun setupList(result: DataResult<List<ListValueItem>>) {
-        val list = result.consume() ?: return
+    private fun setupList(result: DataResult<ListModel>) {
+        val dataResult = result.consume() ?: return
         binding?.let {
             it.progressBar.visibility = View.GONE
             it.tvError.visibility = View.GONE
             it.recyclerView.visibility = View.VISIBLE
+            rvAdapter.submitList(dataResult.list)
         }
-        rvAdapter.submitList(list)
     }
 
     override fun onResume() {
         super.onResume()
         presenter.getList(presenterKey)
+    }
+
+    override fun onSaveInstanceState(outState: Bundle) {
+        super.onSaveInstanceState(outState)
+        binding?.let {
+            val bundle = Bundle().apply {
+                putParcelable(ChildPresenter.RV_LIST_STATE, it.recyclerView.layoutManager?.onSaveInstanceState())
+            }
+            presenter.saveState(presenterKey, bundle)
+        }
     }
 
     override fun onDestroyView() {

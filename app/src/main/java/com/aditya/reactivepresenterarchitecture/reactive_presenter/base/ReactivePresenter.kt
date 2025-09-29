@@ -33,6 +33,13 @@ abstract class ReactivePresenter<VS>(
         _viewState.onNext(newViewState)
     }
 
+    private fun resetEmitter() {
+        val viewState = _viewState.value?.apply {
+            getModelView().setConsume(false)
+        }
+        if (viewState != null) emitVewState(viewState)
+    }
+
     fun observeViewState(lifecycleProvider: IRxLifecycleProvider, observer: Observer<VS>) {
         subscriptions.clear()
         setupLifecycleProvider(lifecycleProvider)
@@ -57,6 +64,7 @@ abstract class ReactivePresenter<VS>(
                 .filter { validateOwner(it.owner) }
                 .subscribe {
                     when (it.event) {
+                        Lifecycle.Event.ON_CREATE -> resetEmitter()
                         Lifecycle.Event.ON_RESUME -> isPaused.set(false)
                         Lifecycle.Event.ON_PAUSE -> isPaused.set(true)
                         Lifecycle.Event.ON_DESTROY -> {
@@ -89,7 +97,7 @@ abstract class ReactivePresenter<VS>(
     }
 
     protected fun <T> bindViewState(
-        source: Observable<T>, success: Func1<T, VS>?, loading: VS?, error: Func1<Throwable, VS>?
+        source: Observable<T>, success: Func1<T, VS>? = null, loading: VS? = null, error: Func1<Throwable, VS>? = null
     ) {
         subscriptions.add(
             transformViewState(source, success, loading, error)
@@ -104,7 +112,10 @@ abstract class ReactivePresenter<VS>(
     ): Observable<R> where R : ViewState<*> {
         return source
             .subscribeOn(schedulerProvider.io())
-            .map(success)
+            .map {
+                @Suppress("UNCHECKED_CAST")
+                success?.call(it) ?: it as R
+            }
             .startWith(loading)
             .onErrorReturn {
                 error?.call(

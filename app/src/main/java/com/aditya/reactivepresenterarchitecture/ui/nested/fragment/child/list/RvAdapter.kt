@@ -33,7 +33,6 @@ class RvAdapter: ListAdapter<ListValueItem, RvAdapter.ViewHolder>(ValuesDiffCall
         )
     }
 
-
     class ViewHolder(private val binding: ItemVhBinding): RecyclerView.ViewHolder(binding.root) {
 
         @SuppressLint("SetTextI18n")

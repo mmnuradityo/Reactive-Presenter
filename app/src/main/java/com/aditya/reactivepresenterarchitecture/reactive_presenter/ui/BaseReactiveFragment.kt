@@ -22,12 +22,12 @@ abstract class BaseReactiveFragment<P>(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         val view = createView(inflater, container)
-        initViews(view, savedInstanceState)
         return view
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        initViews(view, savedInstanceState)
         val lifecycleProvider: IRxLifecycleProvider = RxLifecycleProvider(lifecycle)
         if (presenterKey.isEmpty()) observeState(lifecycleProvider)
         else observeState(presenterKey, lifecycleProvider)

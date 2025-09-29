@@ -63,7 +63,7 @@ class NestedDetailFragment : BaseReactiveFragment<IChildPresenter>(ChildComponen
 
     private fun validateAndSetup(dataResult: DataResult<out Any?>?): Boolean {
         if (dataResult == null) return false
-        val result = dataResult.consume() as? DetailValueItem ?: return false
+        val result = dataResult.consume() as? DetailModel ?: return false
 
         binding?.let {
             it.progressBar.visibility = View.GONE

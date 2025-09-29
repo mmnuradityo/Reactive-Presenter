@@ -36,6 +36,13 @@ abstract class CompositeReactivePresenter<VS, CS>(
         _componentState.onNext(componentStates.toMap())
     }
 
+    private fun resetEmitterComponentState(key: String) {
+        val viewState = getComponentState(key)?.apply {
+            getModelView().setConsume(false)
+        }
+        if (viewState != null) emitComponentState(key, viewState)
+    }
+
     override fun observeComponentState(key: String, lifecycleProvider: IRxLifecycleProvider, observer: Observer<CS>) {
         subscriptionObserver[key]?.unsubscribe()
         setupLifecycleComponentProvider(key, lifecycleProvider)
@@ -61,11 +68,15 @@ abstract class CompositeReactivePresenter<VS, CS>(
         subscriptionObserver[eventKey] = lifecycleProvider.getLifecycleObservable()
             .observeOn(schedulerProvider.ui())
             .filter { validateOwner(it.owner) }
-            .subscribe { if (it.event == Lifecycle.Event.ON_DESTROY ) destroy() }
+            .subscribe {
+                if (it.event == Lifecycle.Event.ON_CREATE ) resetEmitterComponentState(key)
+                else if (it.event == Lifecycle.Event.ON_DESTROY ) destroy()
+            }
     }
 
     protected fun <T> bindComponentState(
-        key: String, source: Observable<T>, success: Func1<T, CS>?, loading: CS?, error: Func1<Throwable, CS>?
+        key: String, source: Observable<T>, success: Func1<T, CS>? = null,
+        loading: CS? = null, error: Func1<Throwable, CS>? = null
     ) {
         componentSubscriptions.add(
             Pair(key, transformViewState(source, success, loading, error)
