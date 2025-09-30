@@ -5,9 +5,12 @@ import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelVie
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState
 
 data class MainFragmentModelView(
-    val result: String = "",
-    val error: String? = null,
-) : ModelView()
+    private val _result: String = "",
+    private val _error: String? = null,
+) : ModelView() {
+    val result get() = consume(_result)
+    val error get() = consume(_error)
+}
 
 sealed class MainFragmentViewState(
     id: Int, modelView: MainFragmentModelView
@@ -32,9 +35,12 @@ sealed class MainFragmentViewState(
 }
 
 data class MainFragmentComponentModelView(
-    val result: String = "",
-    val error: String? = null,
-) : ModelView()
+    private val _result: String = "",
+    private val _error: String? = null,
+) : ModelView() {
+    val result get() = consume(_result)
+    val error get() = consume(_error)
+}
 
 sealed class MainFragmentComponentViewState(
     id: Int, modelView: MainFragmentComponentModelView

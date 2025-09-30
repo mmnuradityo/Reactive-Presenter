@@ -26,7 +26,7 @@ abstract class MainFragmentComponentPresenter(viewState: MainFragmentViewState) 
                 .delay(5, TimeUnit.SECONDS),
             success = { newData ->
                 MainFragmentComponentViewState.Data(
-                    model = modelView.copy(result = newData)
+                    model = modelView.copy(_result = newData)
                 )
             },
             loading = MainFragmentComponentViewState.Loading(
@@ -34,7 +34,7 @@ abstract class MainFragmentComponentPresenter(viewState: MainFragmentViewState) 
             ),
             error = {
                 MainFragmentComponentViewState.Error(
-                    model = modelView.copy(error = it.message)
+                    model = modelView.copy(_error = it.message)
                 )
             }
         )

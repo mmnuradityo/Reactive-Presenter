@@ -23,10 +23,14 @@ data class DetailModel(
 )
 
 data class ChildModelView<T>(
-    var uiState: Bundle? = null,
-    val result: DataResult<T>? = null,
-    val error: String? = null,
-): ModelView()
+    private var _uiState: Bundle? = null,
+    private val _result: DataResult<T>? = null,
+    private val _error: String? = null,
+): ModelView() {
+    val uiState get() = consume(_uiState)
+    val result get() = consume(_result)
+    val error get() = consume(_error)
+}
 
 sealed class ChildViewState<T>(
     id: Int, modelView: ChildModelView<T>

@@ -42,8 +42,11 @@ abstract class ModelView {
     }
 
     fun isConsume(): Boolean = isConsume
+
+    protected fun <T> consume(value: T): T {
+        setConsume(true)
+        return value
+    }
 }
 
-data class DataResult<T>(private var data: T?) {
-    fun consume(): T? = data
-}
+data class DataResult<T>(var data: T?)

@@ -93,7 +93,7 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
                                 uiState.getParcelable(ChildPresenter.RV_LIST_STATE)
                             }
                         )
-                        presenter.saveState(presenterKey, null)
+                        presenter.restoreState(presenterKey)
                     }
                 }
 
@@ -110,7 +110,7 @@ class NestedListFragment : BaseReactiveFragment<IChildPresenter>(ChildComponentK
     }
 
     private fun setupList(result: DataResult<ListModel>) {
-        val dataResult = result.consume() ?: return
+        val dataResult = result.data ?: return
         binding?.let {
             it.progressBar.visibility = View.GONE
             it.tvError.visibility = View.GONE

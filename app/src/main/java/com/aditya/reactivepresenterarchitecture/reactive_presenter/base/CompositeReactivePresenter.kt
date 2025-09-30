@@ -1,5 +1,6 @@
 package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
 
+import android.util.Log
 import androidx.lifecycle.Lifecycle
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
@@ -51,13 +52,12 @@ abstract class CompositeReactivePresenter<VS, CS>(
         subscriptionObserver[key] = componentState
             .compose(lifecycleComponentProvider[key]?.bindUntilDestroy())
             .filter(validatePaused(key))
-            .distinctUntilChanged { old, new -> validateSameValue(old[key], new[key]) }
+            .distinctUntilChanged { old, new -> validateSameValue(new[key]) }
             .map { it[key] }
             .observeOn(schedulerProvider.ui())
             .subscribe {
                 if (it == null) return@subscribe
                 observer.call(it)
-                it.getModelView().setConsume(true)
             }
     }
 

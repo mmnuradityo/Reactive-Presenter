@@ -12,13 +12,13 @@ class ParentPresenter: ChildPresenter(ParentViewState.Empty) {
             source = Observable.just("OK").delay(1, TimeUnit.SECONDS),
             success = {
                 ParentViewState.Success(
-                    modelView.copy(result = it)
+                    modelView.copy(_result = it)
                 )
             },
             loading = ParentViewState.Loading(modelView),
             error = {
                 ParentViewState.Error(
-                    modelView.copy(error = it.message)
+                    modelView.copy(_error = it.message)
                 )
             }
         )

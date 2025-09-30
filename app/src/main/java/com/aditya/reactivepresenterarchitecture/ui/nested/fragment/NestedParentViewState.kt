@@ -4,10 +4,18 @@ import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelVie
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState
 
 data class ParentModelView(
-    var currentPosition: Int = 0,
-    val result: String? = null,
-    val error: String? = null
-): ModelView()
+    private var _currentPosition: Int = 0,
+    private val _result: String? = null,
+    private val _error: String? = null
+): ModelView() {
+    var currentPosition
+        set(value) {
+            _currentPosition = value
+        }
+        get() = consume(_currentPosition)
+    val result get() = consume(_result)
+    val error get() = consume(_error)
+}
 
 sealed class ParentViewState(
     id: Int, modelView: ParentModelView

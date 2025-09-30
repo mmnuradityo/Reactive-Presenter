@@ -4,9 +4,12 @@ import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelVie
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState
 
 data class MainModelView(
-    val list: List<String> = emptyList(),
-    val error: String? = null
-) : ModelView()
+    private val _list: List<String> = emptyList(),
+    private val _error: String? = null
+) : ModelView() {
+    val list get() = consume(_list)
+    val error get() = consume(_error)
+}
 
 sealed class MainViewState(
     id: Int, modelView: MainModelView

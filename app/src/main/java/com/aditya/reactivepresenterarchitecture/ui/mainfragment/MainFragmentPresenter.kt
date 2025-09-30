@@ -12,13 +12,13 @@ class MainFragmentPresenter : MainFragmentComponentPresenter(MainFragmentViewSta
                 .delay(5, java.util.concurrent.TimeUnit.SECONDS),
             success = { newData ->
                 MainFragmentViewState.Data(
-                    modelView.copy(result = newData)
+                    modelView.copy(_result = newData)
                 )
             },
             loading = MainFragmentViewState.Loading(modelView),
             error = {
                 MainFragmentViewState.Error(
-                    modelView.copy(error = it.message)
+                    modelView.copy(_error = it.message)
                 )
             }
         )

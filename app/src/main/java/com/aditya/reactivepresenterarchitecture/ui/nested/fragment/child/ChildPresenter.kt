@@ -40,12 +40,12 @@ abstract class ChildPresenter(
             loading = ChildViewState.Loading(modelView),
             success = {
                 ChildViewState.Data(
-                    modelView.copy(result = DataResult(data = it))
+                    modelView.copy(_result = DataResult(data = it))
                 )
             },
             error = {
                 ChildViewState.Error(
-                    modelView.copy(error = it.message)
+                    modelView.copy(_error = it.message)
                 )
             }
         )
@@ -66,12 +66,12 @@ abstract class ChildPresenter(
             loading = ChildViewState.Loading(modelView),
             success = {
                 ChildViewState.Data(
-                    modelView.copy(result = DataResult(data = it))
+                    modelView.copy(_result = DataResult(data = it))
                 )
             },
             error = {
                 ChildViewState.Error(
-                    modelView.copy(error = it.message)
+                    modelView.copy(_error = it.message)
                 )
             }
         )
@@ -87,11 +87,29 @@ abstract class ChildPresenter(
         emitComponentState(
             key = key,
             newViewState = ChildViewState.StateChange(
-                modelView.copy(uiState = savedState)
+                modelView.copy(_uiState = savedState)
             ).apply {
                 setComponentKey(key)
             }
         )
+    }
+
+    override fun restoreState(key: String) {
+        val modelView: ChildModelView<*> = when (key) {
+            ChildComponentKey.CHILD_LIST.value -> getComponentModelView<ListModel>(key)
+            ChildComponentKey.CHILD_DETAIL.value -> getComponentModelView<DetailModel>(key)
+            else -> throw IllegalArgumentException("Unknown component key: $key")
+        }
+
+        emitComponentState(
+            key = key,
+            newViewState = ChildViewState.StateChange(
+                modelView.copy(_uiState = null).apply { setConsume(true) }
+            ).apply {
+                setComponentKey(key)
+            }
+        )
+
     }
 
     @Suppress("UNCHECKED_CAST")
@@ -105,4 +123,5 @@ interface IChildPresenter: ICompositeReactivePresenter<ChildViewState<*>> {
     fun getList(key: String, page: Int)
     fun getDetail(key: String)
     fun saveState(key: String, savedState: Bundle?)
+    fun restoreState(key: String)
 }
