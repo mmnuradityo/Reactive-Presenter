@@ -1,11 +1,11 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
+package com.aditya.reactivepresenterarchitecture.reactive_presenter
 
 import androidx.fragment.app.FragmentActivity
 import androidx.lifecycle.Lifecycle.Event
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test.BaseReactivePresenterTest
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test.TestModelView
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test.TestViewState
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test.TestableReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.BaseReactivePresenterTest
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test.TestModelView
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test.TestViewState
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test.TestableReactivePresenter
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.RxLifecycleEvent
@@ -95,43 +95,29 @@ class ReactivePresenterTest : BaseReactivePresenterTest<TestableReactivePresente
     }
 
     @Test
-    fun `test validateSameValue when oldViewState is not same`() {
+    fun `test validateConsumed when value is not consumed`() {
         val newModel = TestModelView("new")
-        val newViewState = TestViewState(2, newModel)
-
-        val isSame = presenter.testableValidateSameValue(newViewState, initialViewState)
-        assertFalse(isSame)
-    }
-
-    @Test
-    fun `test validateSameValue when oldViewState is null`() {
-        val isSame = presenter.testableValidateSameValue(null, initialViewState)
-        assertFalse(isSame)
-    }
-
-    @Test
-    fun `test validateSameValue when newViewState is null`() {
-        val isSame = presenter.testableValidateSameValue(initialViewState, null)
-        assertTrue(isSame)
-    }
-
-    @Test
-    fun `test validateSameValue when viewState is same and not consumed`() {
-        val newModelView = TestModelView("initial")
-        newModelView.setConsume(false)
-        val viewState = TestViewState(model = newModelView)
-        val isSame = presenter.testableValidateSameValue(initialViewState, viewState)
-        assertFalse(isSame)
-    }
-
-    @Test
-    fun `test validateSameValue when viewState is same and consumed`() {
-        val newModelView = TestModelView("initial")
-        newModelView.setConsume(true)
-        val isSame = presenter.testableValidateSameValue(
-            initialViewState, TestViewState(model = newModelView)
+        newModel.setConsume(false)
+        val isConsumed = presenter.testableValidateConsumed(
+            TestViewState(model = newModel)
         )
-        assertTrue(isSame)
+        assertFalse(isConsumed)
+    }
+
+    @Test
+    fun `test validateConsumed when value is consumed`() {
+        val newModel = TestModelView("new")
+        newModel.setConsume(true)
+        val isConsumed = presenter.testableValidateConsumed(
+            TestViewState(model = newModel)
+        )
+        assertTrue(isConsumed)
+    }
+
+    @Test
+    fun `test validateConsumed when newViewState is null`() {
+        val isConsumed = presenter.testableValidateConsumed( null)
+        assertTrue(isConsumed)
     }
 
     @Test
@@ -161,6 +147,69 @@ class ReactivePresenterTest : BaseReactivePresenterTest<TestableReactivePresente
         presenter.testBindViewState(
             source = Observable.just(expectationResult),
             success = { TestViewState(successId, TestModelView(it)) },
+            loading = TestViewState(loadingId, TestModelView(expectationLoading)),
+            error = { null }
+        )
+    }
+
+    @Test
+    fun `test bindViewState when success null`() {
+        configureLifecycleProvider()
+
+        val loadingId = 1
+        val successId = 2
+        val expectationLoading = "Loading"
+        val expectationResult = "success"
+
+        presenter.observeViewState(mockLifecycleProvider) {
+            when (it.getId()) {
+                loadingId -> assertEquals(
+                    expectationLoading, it.getModelView().get()
+                )
+
+                successId -> assertEquals(
+                    expectationResult, it.getModelView().get()
+                )
+
+                else -> { /* Handle other ViewStates */
+                }
+            }
+        }
+
+        presenter.testBindViewStateWithoutSuccess(
+            source = Observable.just(expectationResult),
+            loading = TestViewState(loadingId, TestModelView(expectationLoading)),
+            error = { null }
+        )
+    }
+
+    @Test
+    fun `test bindViewState when success return null value`() {
+        configureLifecycleProvider()
+
+        val loadingId = 1
+        val successId = 2
+        val expectationLoading = "Loading"
+        val expectationResult = "success"
+
+        presenter.observeViewState(mockLifecycleProvider) {
+            when (it.getId()) {
+                loadingId -> assertEquals(
+                    expectationLoading, it.getModelView().get()
+                )
+
+                successId -> assertEquals(
+                    expectationResult, it.getModelView().get()
+                )
+
+                else -> { /* Handle other ViewStates */
+                }
+            }
+        }
+
+        presenter.testBindViewState(
+            source = Observable.just(expectationResult),
+            success = { null },
             loading = TestViewState(loadingId, TestModelView(expectationLoading)),
             error = { null }
         )
@@ -228,11 +277,9 @@ class ReactivePresenterTest : BaseReactivePresenterTest<TestableReactivePresente
             }
         }
 
-        presenter.testBindViewState(
+        presenter.testBindViewStateWithoutLoadingAndError(
             source = Observable.error(Throwable(expectationError)),
             success = { TestViewState(successId, TestModelView(it)) },
-            loading = null,
-            error = null
         )
     }
 
@@ -320,6 +367,13 @@ class ReactivePresenterTest : BaseReactivePresenterTest<TestableReactivePresente
     fun `test observeViewState when lifecycle is ON_DESTROY`() {
         runFullObserve()
         lifecycleEventSubject.onNext(RxLifecycleEvent(mockLifecycleOwner, Event.ON_DESTROY))
+    }
+
+
+    @Test
+    fun `test observeViewState when lifecycle is not handled`() {
+        runFullObserve()
+        lifecycleEventSubject.onNext(RxLifecycleEvent(mockLifecycleOwner, Event.ON_ANY))
     }
 
     @Test

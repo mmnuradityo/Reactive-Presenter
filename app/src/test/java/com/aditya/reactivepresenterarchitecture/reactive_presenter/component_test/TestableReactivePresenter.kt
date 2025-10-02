@@ -1,4 +1,4 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test
+package com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test
 
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ReactivePresenter
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState
@@ -20,8 +20,23 @@ class TestableReactivePresenter(
         bindViewState(source, success, loading, error)
     }
 
-    fun testableValidateSameValue(oldState: ViewState<*>?, newState: ViewState<*>?): Boolean {
-        return validateSameValue(oldState, newState)
+    fun testBindViewStateWithoutSuccess(
+        source: Observable<String>,
+        loading: TestViewState?,
+        error: Func1<Throwable, TestViewState>?,
+    ) {
+        bindViewState(source, loading = loading, error = error)
+    }
+
+    fun testBindViewStateWithoutLoadingAndError(
+        source: Observable<String>,
+        success: Func1<String, TestViewState>?,
+    ) {
+        bindViewState(source, success)
+    }
+
+    fun testableValidateConsumed(newState: ViewState<*>?): Boolean {
+        return validateConsumed(newState)
     }
 
     fun testableDestroy() {

@@ -1,7 +1,6 @@
 package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
 
 import android.app.Activity
-import android.util.Log
 import androidx.fragment.app.Fragment
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
@@ -35,10 +34,9 @@ abstract class ReactivePresenter<VS>(
     }
 
     private fun resetEmitter() {
-        val viewState = _viewState.value?.apply {
-            getModelView().setConsume(false)
-        }
-        if (viewState != null) emitVewState(viewState)
+        val viewState = getViewState()
+        viewState.getModelView().setConsume(false)
+        emitVewState(viewState)
     }
 
     fun observeViewState(lifecycleProvider: IRxLifecycleProvider, observer: Observer<VS>) {
@@ -47,7 +45,7 @@ abstract class ReactivePresenter<VS>(
         subscriptions.add(
             viewState
                 .filter { !isPaused.get() && it != null && !it.getModelView().isConsume() }
-                .distinctUntilChanged { old, new -> validateSameValue(new) }
+                .distinctUntilChanged { old, new -> validateConsumed(new) }
                 .compose(lifecycleProvider.bindUntilDestroy())
                 .observeOn(schedulerProvider.ui())
                 .subscribe {
@@ -87,8 +85,9 @@ abstract class ReactivePresenter<VS>(
         return true
     }
 
-    protected open fun validateSameValue(newState: ViewState<*>?): Boolean {
-        return newState?.getModelView()?.isConsume() ?: true
+    protected open fun validateConsumed(newState: ViewState<*>?): Boolean {
+        if (newState == null) return true
+        return newState.getModelView().isConsume()
     }
 
     protected fun <T> bindViewState(

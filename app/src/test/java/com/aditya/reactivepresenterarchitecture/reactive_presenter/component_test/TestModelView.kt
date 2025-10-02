@@ -1,4 +1,4 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test
+package com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test
 
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ModelView
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.ViewState

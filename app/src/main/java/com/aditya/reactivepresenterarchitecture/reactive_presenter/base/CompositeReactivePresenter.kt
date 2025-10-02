@@ -1,6 +1,5 @@
 package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
 
-import android.util.Log
 import androidx.lifecycle.Lifecycle
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
@@ -28,7 +27,7 @@ abstract class CompositeReactivePresenter<VS, CS>(
     private val isComponentPaused = AtomicReference(mutableMapOf<String, Boolean>())
 
     override fun getComponentState(key: String): CS? {
-        return _componentState.value?.get(key)
+        return _componentState.value[key]
     }
 
     override fun emitComponentState(key: String, newViewState: CS) {
@@ -49,10 +48,13 @@ abstract class CompositeReactivePresenter<VS, CS>(
         setupLifecycleComponentProvider(key, lifecycleProvider)
         if (key.isNotEmpty()) attachView(key)
 
+        val provider = lifecycleComponentProvider[key]
+        if (provider == null) return
+
         subscriptionObserver[key] = componentState
-            .compose(lifecycleComponentProvider[key]?.bindUntilDestroy())
+            .compose(provider.bindUntilDestroy())
             .filter(validatePaused(key))
-            .distinctUntilChanged { old, new -> validateSameValue(new[key]) }
+            .distinctUntilChanged { old, new -> validateConsumed(new[key]) }
             .map { it[key] }
             .observeOn(schedulerProvider.ui())
             .subscribe {
@@ -75,23 +77,31 @@ abstract class CompositeReactivePresenter<VS, CS>(
     }
 
     protected fun <T> bindComponentState(
-        key: String, source: Observable<T>, success: Func1<T, CS>? = null,
+        key: String, source: Observable<T>, success: Func1<T, CS>,
         loading: CS? = null, error: Func1<Throwable, CS>? = null
     ) {
+       val provider = lifecycleComponentProvider[key]
+        if (provider == null) return
+
         componentSubscriptions.add(
-            Pair(key, transformViewState(source, success, loading, error)
-                .filter(validatePaused(key))
-                .map {
-                    it.setComponentKey(key)
-                    it
-                }
-                .compose(lifecycleComponentProvider[key]?.bindUntilPause())
-                .subscribe { emitComponentState(key, it) }
+            Pair(
+                key,
+                transformViewState(source, success, loading, error)
+                    .filter(validatePaused(key))
+                    .map {
+                        it?.setComponentKey(key)
+                        it
+                    }
+                    .compose(provider.bindUntilPause())
+                    .subscribe {
+                        if (it == null) return@subscribe
+                        emitComponentState(key, it)
+                    }
             )
         )
     }
 
-    private fun <T> validatePaused(key: String) = Func1<T, Boolean> {
+    fun <T> validatePaused(key: String) = Func1<T, Boolean> {
         !(isComponentPaused.get()[key] ?: true)
     }
 

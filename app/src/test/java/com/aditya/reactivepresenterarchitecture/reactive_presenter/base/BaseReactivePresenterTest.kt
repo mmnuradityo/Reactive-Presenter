@@ -1,10 +1,11 @@
-package com.aditya.reactivepresenterarchitecture.reactive_presenter.base.component_test
+package com.aditya.reactivepresenterarchitecture.reactive_presenter.base
 
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.Lifecycle.Event
+import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.LifecycleRegistry
-import com.aditya.reactivepresenterarchitecture.reactive_presenter.base.IReactivePresenter
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test.TestModelView
+import com.aditya.reactivepresenterarchitecture.reactive_presenter.component_test.TestViewState
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.IRxLifecycleProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.ISchedulerProvider
 import com.aditya.reactivepresenterarchitecture.reactive_presenter.lifecycle.RxLifecycleEvent
@@ -39,13 +40,12 @@ abstract class BaseReactivePresenterTest<P> where P : IReactivePresenter{
     protected val lifecycleEventObservable =  lifecycleEventSubject.asObservable()
     protected lateinit var presenter: P
 
-
     protected abstract fun onCreatePresenter(
         viewState: TestViewState, schedulerProvider: ISchedulerProvider
     ): P
 
     @BeforeEach
-    fun setUp() {
+    open fun setUp() {
         MockKAnnotations.init(this)
         // Mock Schedulers
         every { mockSchedulerProvider.io() } returns Schedulers.trampoline()
@@ -58,12 +58,10 @@ abstract class BaseReactivePresenterTest<P> where P : IReactivePresenter{
         every { mockLifecycleOwner.lifecycle } returns lifecycleRegistry
 
         presenter = onCreatePresenter(initialViewState, mockSchedulerProvider)
-        presenter.attachView("")
     }
 
     @AfterEach
-    fun tearDown() {
-        presenter.detachView("")
+    open fun tearDown() {
         clearAllMocks()
     }
 
@@ -71,10 +69,10 @@ abstract class BaseReactivePresenterTest<P> where P : IReactivePresenter{
         // Mock LifecycleProvider
         val subjectObserver = lifecycleProvider.getLifecycleObservable().asObservable()
         val identityTransformerStop = RxLifecycleTransformer<TestViewState>(
-            subjectObserver.filter { it.event === Event.ON_STOP }
+            subjectObserver.filter { it.event === Lifecycle.Event.ON_STOP }
         )
         val identityTransformerDestroy = RxLifecycleTransformer<TestViewState>(
-            subjectObserver.filter { it.event === Event.ON_DESTROY }
+            subjectObserver.filter { it.event === Lifecycle.Event.ON_DESTROY }
         )
 
         every { lifecycleProvider.bindUntilDestroy<TestViewState>() } returns identityTransformerStop
